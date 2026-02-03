@@ -57,15 +57,17 @@ export async function PATCH(
   const id = parsedId.data;
 
   try {
-    let rows: Array<{
+    type TodoRow = {
       id: number;
       title: string;
       isDone: boolean;
       createdAt: string;
-    }> = [];
+    };
+
+    let rows: TodoRow[] = [];
 
     if (title !== undefined && isDone !== undefined) {
-      rows = await sql`
+      rows = (await sql`
         update todos
         set title = ${title}, is_done = ${isDone}
         where id = ${id}
@@ -74,9 +76,9 @@ export async function PATCH(
           title,
           is_done as "isDone",
           created_at as "createdAt"
-      `;
+      `) as TodoRow[];
     } else if (title !== undefined) {
-      rows = await sql`
+      rows = (await sql`
         update todos
         set title = ${title}
         where id = ${id}
@@ -85,9 +87,9 @@ export async function PATCH(
           title,
           is_done as "isDone",
           created_at as "createdAt"
-      `;
+      `) as TodoRow[];
     } else if (isDone !== undefined) {
-      rows = await sql`
+      rows = (await sql`
         update todos
         set is_done = ${isDone}
         where id = ${id}
@@ -96,7 +98,7 @@ export async function PATCH(
           title,
           is_done as "isDone",
           created_at as "createdAt"
-      `;
+      `) as TodoRow[];
     }
 
     const todo = rows[0];
