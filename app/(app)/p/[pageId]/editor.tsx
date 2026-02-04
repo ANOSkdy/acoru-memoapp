@@ -170,7 +170,9 @@ export default function Editor({
             checked:
               'checked' in update && typeof update.checked === 'boolean'
                 ? update.checked
-                : block.checked ?? false,
+                : 'checked' in block
+                  ? block.checked ?? false
+                  : false,
             clientId: block.clientId
           };
         }
