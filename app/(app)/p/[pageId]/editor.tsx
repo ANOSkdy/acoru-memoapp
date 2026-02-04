@@ -147,9 +147,36 @@ export default function Editor({
 
   const handleBlockChange = (clientId: string, update: Partial<EditorBlock>) => {
     setBlocks((prev) =>
-      prev.map((block) =>
-        block.clientId === clientId ? { ...block, ...update } : block
-      )
+      prev.map((block) => {
+        if (block.clientId !== clientId) {
+          return block;
+        }
+
+        if (block.type === 'divider') {
+          return { type: 'divider', clientId: block.clientId };
+        }
+
+        const nextText =
+          typeof update.text === 'string' ? update.text : block.text ?? '';
+
+        if (block.type === 'todo') {
+          return {
+            type: 'todo',
+            text: nextText,
+            checked:
+              typeof update.checked === 'boolean'
+                ? update.checked
+                : block.checked ?? false,
+            clientId: block.clientId
+          };
+        }
+
+        return {
+          type: block.type,
+          text: nextText,
+          clientId: block.clientId
+        };
+      })
     );
     setIsDirty(true);
     scheduleSave();
