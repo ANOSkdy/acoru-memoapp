@@ -318,7 +318,7 @@ export default function PageEditor({
     }
   };
 
-  const handleHeadingLevel = (index: number, level: number) => {
+  const handleHeadingLevel = (index: number, level: 1 | 2 | 3) => {
     const block = blocks[index];
     if (!block || block.type !== "heading") {
       return;
@@ -473,7 +473,14 @@ export default function PageEditor({
                   className="block-select"
                   value={block.content.level}
                   onChange={(event) =>
-                    handleHeadingLevel(index, Number(event.target.value))
+                    handleHeadingLevel(
+                      index,
+                      Number(event.target.value) === 1
+                        ? 1
+                        : Number(event.target.value) === 2
+                          ? 2
+                          : 3
+                    )
                   }
                 >
                   <option value={1}>H1</option>
