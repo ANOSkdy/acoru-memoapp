@@ -157,14 +157,16 @@ export default function Editor({
         }
 
         const nextText =
-          typeof update.text === 'string' ? update.text : block.text ?? '';
+          'text' in update && typeof update.text === 'string'
+            ? update.text
+            : block.text ?? '';
 
         if (block.type === 'todo') {
           return {
             type: 'todo',
             text: nextText,
             checked:
-              typeof update.checked === 'boolean'
+              'checked' in update && typeof update.checked === 'boolean'
                 ? update.checked
                 : block.checked ?? false,
             clientId: block.clientId
