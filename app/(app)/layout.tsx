@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { requireUser } from '@/lib/auth';
+import { signOut } from '@/lib/auth/actions';
 
 type AppLayoutProps = {
   children: ReactNode;
@@ -33,7 +34,14 @@ export default async function AppLayout({ children }: AppLayoutProps) {
       <div className="app-content">
         <header className="app-header">
           <div className="app-header__title">Welcome back, {user.name}</div>
-          <div className="badge">Secure workspace</div>
+          <div className="app-header__actions">
+            <div className="badge">Secure workspace</div>
+            <form action={signOut}>
+              <button className="button button--ghost" type="submit">
+                Sign out
+              </button>
+            </form>
+          </div>
           <details className="drawer">
             <summary>Menu</summary>
             <div className="drawer__panel">

@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "db:migrate": "node scripts/migrate.mjs"
+    "db:migrate": "node scripts/migrate.mjs",
+    "user:create": "node scripts/create-user.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.9.5",
