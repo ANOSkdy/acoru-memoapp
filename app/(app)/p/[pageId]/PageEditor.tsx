@@ -284,14 +284,38 @@ export default function PageEditor({
       return;
     }
 
-    if (!("text" in block.content)) {
-      return;
+    switch (block.type) {
+      case "heading":
+        updateBlock(index, {
+          ...block,
+          content: { ...block.content, text },
+        });
+        return;
+      case "todo":
+        updateBlock(index, {
+          ...block,
+          content: { ...block.content, text },
+        });
+        return;
+      case "callout":
+        updateBlock(index, {
+          ...block,
+          content: { ...block.content, text },
+        });
+        return;
+      case "paragraph":
+      case "bulleted_list":
+      case "numbered_list":
+      case "toggle":
+      case "quote":
+        updateBlock(index, {
+          ...block,
+          content: { ...block.content, text },
+        });
+        return;
+      default:
+        return;
     }
-
-    updateBlock(index, {
-      ...block,
-      content: { ...block.content, text },
-    });
   };
 
   const handleHeadingLevel = (index: number, level: number) => {
