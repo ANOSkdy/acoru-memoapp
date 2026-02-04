@@ -8,6 +8,7 @@
   --color-border: #e2dfd8;
   --color-primary: #2f6fed;
   --color-primary-ink: #0b1b3a;
+  --color-danger: #c62828;
   --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.08);
   --shadow-md: 0 6px 20px rgba(16, 24, 40, 0.12);
   --radius-lg: 20px;
@@ -94,6 +95,12 @@ a {
   font-weight: 600;
 }
 
+.app-header__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .app-main {
   padding: 32px 24px 48px;
   max-width: 960px;
@@ -173,9 +180,74 @@ a {
   border: 1px solid var(--color-border);
 }
 
+.auth-form {
+  display: grid;
+  gap: 16px;
+}
+
+.auth-field {
+  display: grid;
+  gap: 6px;
+}
+
+.auth-label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.auth-input {
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-muted);
+  color: var(--color-text);
+  font-size: 14px;
+}
+
+.auth-input:focus {
+  outline: 2px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
+  border-color: var(--color-primary);
+}
+
+.auth-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.auth-error {
+  color: var(--color-danger);
+  font-size: 13px;
+  margin: 0;
+}
+
 .center-stack {
   display: grid;
   gap: 12px;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-primary);
+  background: var(--color-primary);
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.button--ghost {
+  background: transparent;
+  color: var(--color-primary-ink);
+  border-color: var(--color-border);
 }
 
 @media (min-width: 960px) {
