@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { sql } from '@/lib/db';
 import { hashPassword, verifyPassword } from '@/lib/auth/password';
+import { ensureMigrations } from '@/lib/db/migrations';
 import {
   createSessionToken,
   getSessionCookieOptions,
@@ -45,6 +46,8 @@ export const signIn = async (
   if (!sql) {
     return { error: '現在サインインできません。しばらくしてから再試行してください。' };
   }
+
+  await ensureMigrations();
 
   const users = await sql`
     select id, email, display_name, password_hash
@@ -110,6 +113,8 @@ export const createUser = async (
   if (!sql) {
     throw new Error('Database is not configured.');
   }
+
+  await ensureMigrations();
 
   const passwordHash = await hashPassword(password);
   const name = displayName ?? email.split('@')[0];
