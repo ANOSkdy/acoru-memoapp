@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react';
+import './globals.css';
 
 export const metadata = {
-  title: 'Neon Starter',
-  description: 'Next.js + TypeScript + Neon minimal setup.'
+  title: 'Acoru Memo',
+  description: 'Memo app scaffolded for Vercel deploys.'
 };
 
 type RootLayoutProps = {
@@ -12,9 +13,7 @@ type RootLayoutProps = {
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="ja">
-      <body style={{ fontFamily: 'system-ui, sans-serif', margin: 0 }}>
-        {children}
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

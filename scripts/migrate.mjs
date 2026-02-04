@@ -2,10 +2,15 @@ import { neon } from '@neondatabase/serverless';
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 
-const databaseUrl = process.env.DATABASE_URL ?? process.env.NEON_DATABASE_URL;
+const databaseUrl =
+  process.env.DATABASE_URL_UNPOOLED ??
+  process.env.DATABASE_URL ??
+  process.env.NEON_DATABASE_URL;
 
 if (!databaseUrl) {
-  console.error('Missing DATABASE_URL or NEON_DATABASE_URL.');
+  console.error(
+    'Missing DATABASE_URL_UNPOOLED, DATABASE_URL, or NEON_DATABASE_URL.'
+  );
   process.exit(1);
 }
 
