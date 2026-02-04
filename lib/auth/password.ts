@@ -1,21 +1,41 @@
 import 'server-only';
 
-import { randomBytes, scrypt as scryptCallback, timingSafeEqual } from 'crypto';
-import { promisify } from 'util';
+import { randomBytes, scrypt, timingSafeEqual } from 'crypto';
 
-const scrypt = promisify(scryptCallback);
+type ScryptOptions = {
+  N: number;
+  r: number;
+  p: number;
+  maxmem?: number;
+};
 
 const KEY_LENGTH = 64;
-const SCRYPT_OPTIONS = {
+const SCRYPT_OPTIONS: ScryptOptions = {
   N: 16384,
   r: 8,
   p: 1,
   maxmem: 32 * 1024 * 1024
 };
 
+const scryptAsync = (
+  password: string,
+  salt: Buffer,
+  keyLength: number,
+  options: ScryptOptions
+): Promise<Buffer> =>
+  new Promise((resolve, reject) => {
+    scrypt(password, salt, keyLength, options, (error, derivedKey) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+      resolve(derivedKey as Buffer);
+    });
+  });
+
 export const hashPassword = async (password: string): Promise<string> => {
   const salt = randomBytes(16);
-  const derivedKey = (await scrypt(password, salt, KEY_LENGTH, SCRYPT_OPTIONS)) as Buffer;
+  const derivedKey = await scryptAsync(password, salt, KEY_LENGTH, SCRYPT_OPTIONS);
   return [
     'scrypt',
     SCRYPT_OPTIONS.N,
@@ -35,7 +55,7 @@ export const verifyPassword = async (
     return false;
   }
 
-  const options = {
+  const options: ScryptOptions = {
     N: Number(n),
     r: Number(r),
     p: Number(p),
@@ -47,7 +67,7 @@ export const verifyPassword = async (
   }
 
   const salt = Buffer.from(saltBase64, 'base64');
-  const derivedKey = (await scrypt(password, salt, KEY_LENGTH, options)) as Buffer;
+  const derivedKey = await scryptAsync(password, salt, KEY_LENGTH, options);
   const expected = Buffer.from(hashBase64, 'base64');
 
   if (expected.length !== derivedKey.length) {
