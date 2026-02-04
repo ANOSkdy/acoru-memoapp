@@ -354,7 +354,7 @@ export default function Editor({
               <label className="editor__checkbox">
                 <input
                   type="checkbox"
-                  checked={block.checked ?? false}
+                  checked={'checked' in block ? block.checked ?? false : false}
                   onChange={(event) =>
                     handleBlockChange(block.clientId, {
                       checked: event.target.checked
