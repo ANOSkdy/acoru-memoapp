@@ -30,6 +30,12 @@ DATABASE_URL=postgres://user:password@host.neon.tech/neondb?sslmode=require
 pnpm user:create -- --email you@example.com --password "your-password"
 ```
 
+画面検証用のユーザー（ID: `lacoru43oo` / PW: `totomomo`）を登録する場合は以下を実行します。
+
+```bash
+pnpm user:seed-screen-check
+```
+
 ## Neon 動作確認
 
 `/` にアクセスすると `select now()` の結果を表示します。`DATABASE_URL` が未設定の場合は案内メッセージを出します。

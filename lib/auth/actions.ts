@@ -15,7 +15,7 @@ import {
 type SignInState = {
   error?: string;
   fieldErrors?: {
-    email?: string;
+    identifier?: string;
     password?: string;
   };
 };
@@ -26,14 +26,16 @@ export const signIn = async (
   _prevState: SignInState,
   formData: FormData
 ): Promise<SignInState> => {
-  const email = String(formData.get('email') ?? '')
-    .trim()
-    .toLowerCase();
+  const identifier = String(
+    formData.get('identifier') ?? formData.get('email') ?? ''
+  ).trim();
   const password = String(formData.get('password') ?? '');
 
   const fieldErrors: SignInState['fieldErrors'] = {};
-  if (!email || !emailRegex.test(email)) {
-    fieldErrors.email = 'メールアドレスを確認してください。';
+  if (!identifier) {
+    fieldErrors.identifier = 'メールアドレスまたはIDを入力してください。';
+  } else if (identifier.includes('@') && !emailRegex.test(identifier)) {
+    fieldErrors.identifier = 'メールアドレスを確認してください。';
   }
   if (!password) {
     fieldErrors.password = 'パスワードを入力してください。';
@@ -46,12 +48,21 @@ export const signIn = async (
     return { error: '現在サインインできません。しばらくしてから再試行してください。' };
   }
 
-  const users = await sql`
-    select id, email, display_name, password_hash
-    from users
-    where email = ${email}
-    limit 1;
-  `;
+  const isEmail = emailRegex.test(identifier);
+  const loginValue = identifier.toLowerCase();
+  const users = isEmail
+    ? await sql`
+        select id, email, display_name, password_hash
+        from users
+        where email = ${loginValue}
+        limit 1;
+      `
+    : await sql`
+        select id, email, display_name, password_hash
+        from users
+        where lower(display_name) = ${loginValue}
+        limit 1;
+      `;
 
   if (users.length === 0) {
     return { error: 'メールアドレスまたはパスワードが違います。' };

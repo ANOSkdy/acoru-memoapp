@@ -6,7 +6,7 @@ import { signIn } from '@/lib/auth/actions';
 type SignInState = {
   error?: string;
   fieldErrors?: {
-    email?: string;
+    identifier?: string;
     password?: string;
   };
 };
@@ -31,21 +31,21 @@ export const SignInForm = () => {
   return (
     <form action={formAction} className="auth-form">
       <div className="auth-field">
-        <label className="auth-label" htmlFor="email">
-          Email
+        <label className="auth-label" htmlFor="identifier">
+          Email or ID
         </label>
         <input
           className="auth-input"
-          id="email"
-          name="email"
-          type="email"
-          placeholder="you@example.com"
-          autoComplete="email"
+          id="identifier"
+          name="identifier"
+          type="text"
+          placeholder="you@example.com / your-id"
+          autoComplete="username"
           required
         />
-        {state.fieldErrors?.email ? (
+        {state.fieldErrors?.identifier ? (
           <p className="auth-error" role="alert">
-            {state.fieldErrors.email}
+            {state.fieldErrors.identifier}
           </p>
         ) : null}
       </div>

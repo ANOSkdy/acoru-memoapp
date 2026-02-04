@@ -9,7 +9,8 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "db:migrate": "node scripts/migrate.mjs",
-    "user:create": "node scripts/create-user.mjs"
+    "user:create": "node scripts/create-user.mjs",
+    "user:seed-screen-check": "node scripts/seed-screen-check.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.9.5",
