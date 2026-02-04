@@ -250,6 +250,113 @@ a {
   border-color: var(--color-border);
 }
 
+.editor {
+  display: grid;
+  gap: 20px;
+}
+
+.editor__header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.editor__title {
+  font-size: 28px;
+  font-weight: 600;
+  border: none;
+  background: transparent;
+  padding: 4px 0;
+}
+
+.editor__title:focus {
+  outline: none;
+  border-bottom: 2px solid var(--color-primary);
+}
+
+.editor__status {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.editor__banner {
+  border-radius: var(--radius-md);
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  display: grid;
+  gap: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.editor__banner--error {
+  border-color: rgba(198, 40, 40, 0.35);
+  background: #fff4f4;
+}
+
+.editor__banner--conflict {
+  border-color: rgba(47, 111, 237, 0.35);
+  background: #f2f6ff;
+}
+
+.editor__banner-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.editor__blocks {
+  display: grid;
+  gap: 16px;
+}
+
+.editor__block {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.editor__select {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.editor__input {
+  width: 100%;
+  min-height: 80px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  font-family: inherit;
+  resize: vertical;
+}
+
+.editor__divider {
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
+.editor__checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
 @media (min-width: 960px) {
   .app-sidebar {
     display: block;
