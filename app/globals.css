@@ -250,6 +250,150 @@ a {
   border-color: var(--color-border);
 }
 
+.editor-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.editor-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.editor-title-input {
+  width: 100%;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  padding: 12px 16px;
+  font-size: 24px;
+  font-weight: 600;
+  background: var(--color-surface);
+}
+
+.editor-status {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.editor-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.editor-banner__actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.editor-banner--warning {
+  border-color: rgba(255, 149, 0, 0.4);
+  background: #fff7ec;
+}
+
+.editor-banner--danger {
+  border-color: rgba(198, 40, 40, 0.4);
+  background: #fff0f0;
+}
+
+.editor-banner--muted {
+  border-color: var(--color-border);
+  background: var(--color-surface-muted);
+}
+
+.block-list {
+  display: grid;
+  gap: 16px;
+}
+
+.block-card {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.block-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.block-row--inline {
+  display: inline-flex;
+  gap: 8px;
+}
+
+.block-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.block-select {
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  font-size: 14px;
+}
+
+.block-input {
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  font-size: 14px;
+}
+
+.block-input--small {
+  max-width: 120px;
+}
+
+.block-textarea {
+  width: 100%;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  padding: 10px 12px;
+  font-size: 15px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.block-divider {
+  height: 2px;
+  background: var(--color-border);
+  border-radius: 999px;
+}
+
+.block-image img {
+  max-width: 100%;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+}
+
+.block-muted {
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+
+.editor-add {
+  align-self: flex-start;
+}
+
 @media (min-width: 960px) {
   .app-sidebar {
     display: block;
