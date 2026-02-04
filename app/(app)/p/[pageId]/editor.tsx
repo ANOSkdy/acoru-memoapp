@@ -159,7 +159,9 @@ export default function Editor({
         const nextText =
           'text' in update && typeof update.text === 'string'
             ? update.text
-            : block.text ?? '';
+            : 'text' in block
+              ? block.text
+              : '';
 
         if (block.type === 'todo') {
           return {
