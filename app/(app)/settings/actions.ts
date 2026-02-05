@@ -11,6 +11,7 @@ import {
   preferencesSchema,
   profileSchema
 } from '@/lib/validation/settings';
+import { isStepUpVerified } from '@/lib/webauthn/stepup';
 
 export type ActionState = {
   ok?: boolean;
@@ -162,6 +163,11 @@ export const adminCreateUser = async (
   const isAdmin = await ensureAdmin(user.id);
   if (!isAdmin) {
     return { error: '管理者のみ利用できます。' };
+  }
+
+  const stepUpVerified = await isStepUpVerified();
+  if (!stepUpVerified) {
+    return { error: 'STEP_UP_REQUIRED' };
   }
 
   const parsed = adminCreateUserSchema.safeParse({

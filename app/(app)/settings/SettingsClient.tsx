@@ -1,5 +1,6 @@
 'use client';
 
+import { startAuthentication, startRegistration } from '@simplewebauthn/browser';
 import { useEffect, useState } from 'react';
 import { useFormState, useFormStatus } from 'react-dom';
 import type { ActionState } from './actions';
@@ -52,6 +53,13 @@ export default function SettingsClient({ user, preferences, isAdmin }: SettingsC
   const [adminState, adminAction] = useFormState(adminCreateUser, initialState);
   const [tempPassword, setTempPassword] = useState<string | null>(null);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [passkeyStatus, setPasskeyStatus] = useState<{
+    type: 'success' | 'error';
+    message: string;
+  } | null>(null);
+  const [passkeyBusy, setPasskeyBusy] = useState<'register' | 'authenticate' | null>(
+    null
+  );
 
   useEffect(() => {
     if (adminState.tempPassword) {
@@ -69,6 +77,117 @@ export default function SettingsClient({ user, preferences, isAdmin }: SettingsC
       setCopySuccess(true);
     } catch {
       setCopySuccess(false);
+    }
+  };
+
+  const ensureWebAuthnSupport = () => {
+    if (typeof window === 'undefined' || !window.PublicKeyCredential) {
+      setPasskeyStatus({
+        type: 'error',
+        message: 'このブラウザではパスキーを利用できません。'
+      });
+      return false;
+    }
+    return true;
+  };
+
+  const getErrorMessage = (errorCode?: string) => {
+    if (errorCode === 'NO_CREDENTIALS') {
+      return 'まずパスキーを登録してください。';
+    }
+    if (errorCode === 'CHALLENGE_EXPIRED') {
+      return '認証に時間がかかりすぎました。もう一度お試しください。';
+    }
+    if (errorCode === 'NO_SESSION') {
+      return 'セッションが確認できませんでした。再度ログインしてください。';
+    }
+    return 'パスキー操作に失敗しました。';
+  };
+
+  const handlePasskeyRegister = async () => {
+    if (!ensureWebAuthnSupport()) {
+      return;
+    }
+    setPasskeyBusy('register');
+    setPasskeyStatus(null);
+    try {
+      const optionsResponse = await fetch('/api/webauthn/registration/options', {
+        method: 'POST'
+      });
+      const optionsData = await optionsResponse.json().catch(() => null);
+      if (!optionsResponse.ok) {
+        throw new Error(optionsData?.error);
+      }
+      const attestationResponse = await startRegistration(optionsData);
+      const verifyResponse = await fetch('/api/webauthn/registration/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ attestationResponse })
+      });
+      const verifyData = await verifyResponse.json().catch(() => null);
+      if (!verifyResponse.ok) {
+        throw new Error(verifyData?.error);
+      }
+      setPasskeyStatus({ type: 'success', message: 'パスキーを登録しました。' });
+    } catch (error) {
+      if (error instanceof Error && error.name === 'NotAllowedError') {
+        setPasskeyStatus({
+          type: 'error',
+          message: '操作をキャンセルしました。'
+        });
+      } else {
+        setPasskeyStatus({
+          type: 'error',
+          message: getErrorMessage(error instanceof Error ? error.message : undefined)
+        });
+      }
+    } finally {
+      setPasskeyBusy(null);
+    }
+  };
+
+  const handleStepUp = async () => {
+    if (!ensureWebAuthnSupport()) {
+      return;
+    }
+    setPasskeyBusy('authenticate');
+    setPasskeyStatus(null);
+    try {
+      const optionsResponse = await fetch('/api/webauthn/authentication/options', {
+        method: 'POST'
+      });
+      const optionsData = await optionsResponse.json().catch(() => null);
+      if (!optionsResponse.ok) {
+        throw new Error(optionsData?.error);
+      }
+      const assertionResponse = await startAuthentication(optionsData);
+      const verifyResponse = await fetch('/api/webauthn/authentication/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assertionResponse })
+      });
+      const verifyData = await verifyResponse.json().catch(() => null);
+      if (!verifyResponse.ok) {
+        throw new Error(verifyData?.error);
+      }
+      setPasskeyStatus({
+        type: 'success',
+        message: '重要操作のための認証が完了しました。'
+      });
+    } catch (error) {
+      if (error instanceof Error && error.name === 'NotAllowedError') {
+        setPasskeyStatus({
+          type: 'error',
+          message: '操作をキャンセルしました。'
+        });
+      } else {
+        setPasskeyStatus({
+          type: 'error',
+          message: getErrorMessage(error instanceof Error ? error.message : undefined)
+        });
+      }
+    } finally {
+      setPasskeyBusy(null);
     }
   };
 
@@ -210,6 +329,40 @@ export default function SettingsClient({ user, preferences, isAdmin }: SettingsC
             <SubmitButton label="変更する" pendingLabel="更新中…" />
           </div>
         </form>
+        <div className="settings-form">
+          <div className="settings-field">
+            <h3 className="settings-label">パスキー</h3>
+            <p className="settings-subtitle">
+              重要操作の前に生体認証で本人確認を行います。
+            </p>
+          </div>
+          {passkeyStatus ? (
+            <p
+              className={passkeyStatus.type === 'success' ? 'settings-success' : 'settings-error'}
+              role={passkeyStatus.type === 'success' ? 'status' : 'alert'}
+            >
+              {passkeyStatus.message}
+            </p>
+          ) : null}
+          <div className="settings-actions">
+            <button
+              className="button"
+              type="button"
+              onClick={handlePasskeyRegister}
+              disabled={passkeyBusy === 'register'}
+            >
+              {passkeyBusy === 'register' ? '登録中…' : 'パスキーを登録'}
+            </button>
+            <button
+              className="button button--ghost"
+              type="button"
+              onClick={handleStepUp}
+              disabled={passkeyBusy === 'authenticate'}
+            >
+              {passkeyBusy === 'authenticate' ? '認証中…' : '重要操作のために認証'}
+            </button>
+          </div>
+        </div>
       </section>
 
       <section className="card settings-card">
@@ -322,9 +475,27 @@ export default function SettingsClient({ user, preferences, isAdmin }: SettingsC
               </label>
             </div>
             {adminState.error ? (
-              <p className="settings-error" role="alert">
-                {adminState.error}
-              </p>
+              adminState.error === 'STEP_UP_REQUIRED' ? (
+                <div className="settings-field">
+                  <p className="settings-error" role="alert">
+                    重要操作にはパスキー認証が必要です。
+                  </p>
+                  <button
+                    className="button button--ghost"
+                    type="button"
+                    onClick={handleStepUp}
+                    disabled={passkeyBusy === 'authenticate'}
+                  >
+                    {passkeyBusy === 'authenticate'
+                      ? '認証中…'
+                      : '重要操作のために認証'}
+                  </button>
+                </div>
+              ) : (
+                <p className="settings-error" role="alert">
+                  {adminState.error}
+                </p>
+              )
             ) : null}
             {adminState.ok ? (
               <p className="settings-success" role="status">
