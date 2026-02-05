@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import {
   type BlockType,
@@ -120,7 +121,9 @@ export default function PageEditor({
     serverRevision?: number;
   }>({ active: false, dismissed: false });
   const [autosavePaused, setAutosavePaused] = useState(false);
+  const [trashPending, setTrashPending] = useState(false);
 
+  const router = useRouter();
   const isSavingRef = useRef(false);
   const skipAutosaveRef = useRef(true);
   const skipNextAutosaveRef = useRef(false);
@@ -231,6 +234,37 @@ export default function PageEditor({
       );
     }
   }, [pageId]);
+
+  const handleMoveToTrash = useCallback(async () => {
+    if (trashPending) {
+      return;
+    }
+    const confirmed = window.confirm(
+      "このメモをゴミ箱へ移動します。後で復元できます。"
+    );
+    if (!confirmed) {
+      return;
+    }
+    setTrashPending(true);
+    try {
+      const response = await fetch(`/api/pages/${pageId}/trash`, {
+        method: "POST",
+      });
+      if (!response.ok) {
+        throw new Error("ゴミ箱への移動に失敗しました。");
+      }
+      router.push("/notes");
+      router.refresh();
+    } catch (error) {
+      setSaveError(
+        error instanceof Error
+          ? error.message
+          : "ゴミ箱への移動に失敗しました。"
+      );
+    } finally {
+      setTrashPending(false);
+    }
+  }, [pageId, router, trashPending]);
 
   useEffect(() => {
     if (skipAutosaveRef.current) {
@@ -364,9 +398,19 @@ export default function PageEditor({
           placeholder="タイトルを入力"
           aria-label="ページタイトル"
         />
-        <div className="editor-status">
-          <span>保存状態:</span>
-          <strong>{saveStatus === "Saving" ? "Saving…" : saveStatus}</strong>
+        <div className="editor-status-row">
+          <div className="editor-status">
+            <span>保存状態:</span>
+            <strong>{saveStatus === "Saving" ? "Saving…" : saveStatus}</strong>
+          </div>
+          <button
+            className="button button--ghost"
+            type="button"
+            onClick={handleMoveToTrash}
+            disabled={trashPending}
+          >
+            ゴミ箱へ移動
+          </button>
         </div>
       </div>
 

@@ -24,6 +24,7 @@ const ensureWorkspaceAccess = async (pageId: string, workspaceId: string) => {
     from pages
     where id = ${pageId}
       and workspace_id = ${workspaceId}
+      and is_deleted = false
     limit 1
   `;
 

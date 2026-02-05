@@ -34,6 +34,7 @@ export async function GET(
     set last_opened_at = now()
     where id = ${pageId}
       and workspace_id = ${workspaceId}
+      and is_deleted = false
     returning
       id,
       title,
@@ -46,4 +47,41 @@ export async function GET(
   }
 
   return NextResponse.json({ ok: true, page: rows[0] }, { status: 200 });
+}
+
+export async function DELETE(
+  _request: Request,
+  { params }: { params: { pageId: string } }
+) {
+  if (!sql) {
+    return NextResponse.json(
+      { ok: false, error: 'Database not configured.' },
+      { status: 503 }
+    );
+  }
+
+  const user = await getSessionUser();
+  if (!user) {
+    return NextResponse.json({ ok: false }, { status: 401 });
+  }
+
+  const workspaceId = await getWorkspaceIdForUser(user.id);
+  if (!workspaceId) {
+    return NextResponse.json({ ok: false }, { status: 404 });
+  }
+
+  const pageId = params.pageId;
+
+  const result = await sql`
+    delete from pages
+    where id = ${pageId}
+      and workspace_id = ${workspaceId}
+    returning id
+  `;
+
+  if (result.length === 0) {
+    return NextResponse.json({ ok: false }, { status: 404 });
+  }
+
+  return NextResponse.json({ ok: true }, { status: 200 });
 }

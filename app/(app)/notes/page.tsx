@@ -1,11 +1,11 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import NotesList from './notes-list';
 import { requireUser } from '@/lib/auth';
 import {
   createNewPage,
   decodePageCursor,
-  DEFAULT_PAGE_TITLE,
   listPagesForWorkspace
 } from '@/lib/pages';
 import { getWorkspaceIdForUser } from '@/lib/workspaces';
@@ -13,17 +13,6 @@ import { getWorkspaceIdForUser } from '@/lib/workspaces';
 export const runtime = 'nodejs';
 
 const DEFAULT_LIMIT = 20;
-
-const formatUpdatedAt = (value: string | Date | null) => {
-  if (!value) {
-    return 'Not edited yet';
-  }
-  const date = typeof value === 'string' ? new Date(value) : value;
-  return new Intl.DateTimeFormat('ja-JP', {
-    dateStyle: 'medium',
-    timeStyle: 'short'
-  }).format(date);
-};
 
 type NotesPageProps = {
   searchParams?: { cursor?: string };
@@ -74,18 +63,7 @@ export default async function NotesPage({ searchParams }: NotesPageProps) {
             </form>
           </div>
         ) : (
-          <div className="home-list">
-            {items.map((page) => (
-              <Link key={page.id} className="home-list__item" href={`/p/${page.id}`}>
-                <div className="home-list__title">
-                  {page.title || DEFAULT_PAGE_TITLE}
-                </div>
-                <div className="home-list__meta">
-                  最終更新: {formatUpdatedAt(page.updatedAt)}
-                </div>
-              </Link>
-            ))}
-          </div>
+          <NotesList items={items} />
         )}
       </section>
 

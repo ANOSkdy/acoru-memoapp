@@ -4,9 +4,10 @@ import { notFound, redirect } from 'next/navigation';
 
 import { requireUser } from '@/lib/auth';
 import { sql } from '@/lib/db';
+import { DEFAULT_PAGE_TITLE } from '@/lib/page-title';
 import { getWorkspaceIdForUser } from '@/lib/workspaces';
 
-export const DEFAULT_PAGE_TITLE = 'Untitled';
+export { DEFAULT_PAGE_TITLE };
 
 type PageCursor = {
   updatedAt: string;
