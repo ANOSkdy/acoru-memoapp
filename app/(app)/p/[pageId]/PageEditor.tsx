@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import {
@@ -17,7 +17,6 @@ type PageEditorProps = {
   initialIsFavorite: boolean;
 };
 
-type SaveStatus = "Saved" | "Saving" | "Error";
 
 const editorBlockTypes = blockTypes.filter(
   (type) => type !== "image"
@@ -115,14 +114,13 @@ export default function PageEditor({
   const [title, setTitle] = useState(initialTitle);
   const [blocks, setBlocks] = useState<FlatBlock[]>(initialBlocks);
   const [baseRevision, setBaseRevision] = useState(initialRevision);
-  const [saveStatus, setSaveStatus] = useState<SaveStatus>("Saved");
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const [conflictState, setConflictState] = useState<{
     active: boolean;
     dismissed: boolean;
     serverRevision?: number;
   }>({ active: false, dismissed: false });
-  const [autosavePaused, setAutosavePaused] = useState(false);
   const [trashPending, setTrashPending] = useState(false);
   const [isFavorite, setIsFavorite] = useState(initialIsFavorite);
   const [favoritePending, setFavoritePending] = useState(false);
@@ -130,9 +128,6 @@ export default function PageEditor({
 
   const router = useRouter();
   const isSavingRef = useRef(false);
-  const skipAutosaveRef = useRef(true);
-  const skipNextAutosaveRef = useRef(false);
-  const autosaveTimerRef = useRef<number | null>(null);
 
   const saveNow = useCallback(async () => {
     if (isSavingRef.current) {
@@ -140,7 +135,7 @@ export default function PageEditor({
     }
 
     isSavingRef.current = true;
-    setSaveStatus("Saving");
+    setIsSaving(true);
     setSaveError(null);
 
     const payload = {
@@ -169,8 +164,6 @@ export default function PageEditor({
           dismissed: false,
           serverRevision: data.serverRevision,
         });
-        setAutosavePaused(true);
-        setSaveStatus("Error");
         return;
       }
 
@@ -186,16 +179,13 @@ export default function PageEditor({
         setBaseRevision(data.contentRevision);
       }
 
-      setSaveStatus("Saved");
-      setAutosavePaused(false);
     } catch (error) {
-      setSaveStatus("Error");
       setSaveError(
         error instanceof Error ? error.message : "保存に失敗しました。"
       );
-      setAutosavePaused(true);
     } finally {
       isSavingRef.current = false;
+      setIsSaving(false);
     }
   }, [baseRevision, blocks, pageId, title]);
 
@@ -228,16 +218,13 @@ export default function PageEditor({
       }
 
       if (Array.isArray(blocksData.blocks)) {
-        setBlocks(blocksData.blocks);
-      }
+      setBlocks(blocksData.blocks);
+    }
 
-      setConflictState({ active: false, dismissed: false });
-      setAutosavePaused(false);
-      setSaveStatus("Saved");
-      setSaveError(null);
-      setFavoriteError(null);
-      skipNextAutosaveRef.current = true;
-    } catch (error) {
+    setConflictState({ active: false, dismissed: false });
+    setSaveError(null);
+    setFavoriteError(null);
+  } catch (error) {
       setSaveError(
         error instanceof Error ? error.message : "再読み込みに失敗しました。"
       );
@@ -302,36 +289,6 @@ export default function PageEditor({
       setFavoritePending(false);
     }
   }, [favoritePending, isFavorite, pageId, router]);
-
-  useEffect(() => {
-    if (skipAutosaveRef.current) {
-      skipAutosaveRef.current = false;
-      return;
-    }
-
-    if (skipNextAutosaveRef.current) {
-      skipNextAutosaveRef.current = false;
-      return;
-    }
-
-    if (autosavePaused) {
-      return;
-    }
-
-    if (autosaveTimerRef.current) {
-      window.clearTimeout(autosaveTimerRef.current);
-    }
-
-    autosaveTimerRef.current = window.setTimeout(() => {
-      void saveNow();
-    }, 800);
-
-    return () => {
-      if (autosaveTimerRef.current) {
-        window.clearTimeout(autosaveTimerRef.current);
-      }
-    };
-  }, [autosavePaused, blocks, saveNow, title]);
 
   const updateBlock = (index: number, nextBlock: FlatBlock) => {
     setBlocks((prev) =>
@@ -425,13 +382,6 @@ export default function PageEditor({
     });
   };
 
-  const statusLabel =
-    saveStatus === "Saving"
-      ? "Saving…"
-      : saveStatus === "Error"
-        ? "保存に失敗しました。"
-        : null;
-
   return (
     <div className="editor-shell">
       <div className="editor-header">
@@ -443,12 +393,15 @@ export default function PageEditor({
           aria-label="ページタイトル"
         />
         <div className="editor-status-row">
-          {statusLabel && (
-            <div className="editor-status">
-              <strong>{statusLabel}</strong>
-            </div>
-          )}
           <div className="editor-actions">
+            <button
+              className="button editor-save"
+              type="button"
+              onClick={() => void saveNow()}
+              disabled={isSaving}
+            >
+              Save
+            </button>
             <button
               className="button button--ghost"
               type="button"
@@ -492,7 +445,6 @@ export default function PageEditor({
                   active: false,
                   dismissed: true,
                 }));
-                setAutosavePaused(true);
               }}
             >
               Dismiss
@@ -503,7 +455,7 @@ export default function PageEditor({
 
       {!conflictState.active && conflictState.dismissed && (
         <div className="editor-banner editor-banner--muted">
-          <div>競合のため自動保存を停止しています。</div>
+          <div>競合のため保存を停止しています。</div>
           <div className="editor-banner__actions">
             <button className="button" type="button" onClick={reloadFromServer}>
               Reload
@@ -512,11 +464,10 @@ export default function PageEditor({
               className="button button--ghost"
               type="button"
               onClick={() => {
-                setAutosavePaused(false);
                 void saveNow();
               }}
             >
-              Retry Save
+              保存を再試行
             </button>
           </div>
         </div>
@@ -530,11 +481,10 @@ export default function PageEditor({
               className="button"
               type="button"
               onClick={() => {
-                setAutosavePaused(false);
                 void saveNow();
               }}
             >
-              Retry
+              保存を再試行
             </button>
           </div>
         </div>
