@@ -435,6 +435,22 @@ a {
   color: var(--color-text-muted);
 }
 
+.notes-list__edit {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.notes-list__input {
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-muted);
+  color: var(--color-text);
+  font-size: 13px;
+}
+
 .notes-list__controls {
   display: flex;
   flex-direction: column;

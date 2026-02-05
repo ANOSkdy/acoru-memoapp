@@ -44,6 +44,9 @@ export default function NotesHierarchy() {
   const [movePendingId, setMovePendingId] = useState<string | null>(null);
   const [reorderPendingId, setReorderPendingId] = useState<string | null>(null);
   const [deletePendingId, setDeletePendingId] = useState<string | null>(null);
+  const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState('');
+  const [renamePendingId, setRenamePendingId] = useState<string | null>(null);
   const [folders, setFolders] = useState<PageNode[]>([]);
   const [createPending, setCreatePending] = useState<string | null>(null);
 
@@ -278,6 +281,34 @@ export default function NotesHierarchy() {
     }
   };
 
+  const handleRename = async () => {
+    if (!editingFolderId || renamePendingId) {
+      return;
+    }
+    const nextTitle = editingTitle.trim();
+    if (!nextTitle) {
+      return;
+    }
+    setRenamePendingId(editingFolderId);
+    try {
+      const response = await fetch(`/api/pages/${editingFolderId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: nextTitle })
+      });
+      if (!response.ok) {
+        return;
+      }
+      setEditingFolderId(null);
+      setEditingTitle('');
+      await loadList(selectedParentId);
+      await loadTree(selectedParentId);
+      await loadFolderOptions();
+    } finally {
+      setRenamePendingId(null);
+    }
+  };
+
   const renderTree = (parentId: string | null, depth: number) => {
     const key = parentId ?? rootKey;
     const children = treeMap[key] ?? [];
@@ -401,13 +432,44 @@ export default function NotesHierarchy() {
               <div key={item.id} className="notes-list__item">
                 <div className="notes-list__item-main">
                   {item.kind === 'folder' ? (
-                    <button
-                      className="notes-list__title notes-list__title-button"
-                      type="button"
-                      onClick={() => setSelectedParentId(item.id)}
-                    >
-                      📁 {item.title || DEFAULT_FOLDER_TITLE}
-                    </button>
+                    <>
+                      <button
+                        className="notes-list__title notes-list__title-button"
+                        type="button"
+                        onClick={() => setSelectedParentId(item.id)}
+                      >
+                        📁 {item.title || DEFAULT_FOLDER_TITLE}
+                      </button>
+                      {editingFolderId === item.id && (
+                        <div className="notes-list__edit">
+                          <input
+                            className="notes-list__input"
+                            value={editingTitle}
+                            onChange={(event) => setEditingTitle(event.target.value)}
+                            placeholder="フォルダ名を入力"
+                          />
+                          <button
+                            className="button button--ghost"
+                            type="button"
+                            onClick={handleRename}
+                            disabled={renamePendingId === item.id}
+                          >
+                            保存
+                          </button>
+                          <button
+                            className="button button--ghost"
+                            type="button"
+                            onClick={() => {
+                              setEditingFolderId(null);
+                              setEditingTitle('');
+                            }}
+                            disabled={renamePendingId === item.id}
+                          >
+                            キャンセル
+                          </button>
+                        </div>
+                      )}
+                    </>
                   ) : (
                     <Link className="notes-list__title" href={`/p/${item.id}`}>
                       📝 {item.title || DEFAULT_PAGE_TITLE}
@@ -467,14 +529,27 @@ export default function NotesHierarchy() {
                       ↓
                     </button>
                     {item.kind === 'folder' && (
-                      <button
-                        className="button button--ghost"
-                        type="button"
-                        onClick={() => handleDelete(item.id)}
-                        disabled={deletePendingId === item.id}
-                      >
-                        削除
-                      </button>
+                      <>
+                        <button
+                          className="button button--ghost"
+                          type="button"
+                          onClick={() => {
+                            setEditingFolderId(item.id);
+                            setEditingTitle(item.title || DEFAULT_FOLDER_TITLE);
+                          }}
+                          disabled={renamePendingId === item.id}
+                        >
+                          名前を編集
+                        </button>
+                        <button
+                          className="button button--ghost"
+                          type="button"
+                          onClick={() => handleDelete(item.id)}
+                          disabled={deletePendingId === item.id}
+                        >
+                          削除
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
