@@ -43,6 +43,7 @@ export default function NotesHierarchy() {
   const [loadingTree, setLoadingTree] = useState<Record<string, boolean>>({});
   const [movePendingId, setMovePendingId] = useState<string | null>(null);
   const [reorderPendingId, setReorderPendingId] = useState<string | null>(null);
+  const [deletePendingId, setDeletePendingId] = useState<string | null>(null);
   const [folders, setFolders] = useState<PageNode[]>([]);
   const [createPending, setCreatePending] = useState<string | null>(null);
 
@@ -257,6 +258,26 @@ export default function NotesHierarchy() {
     }
   };
 
+  const handleDelete = async (pageId: string) => {
+    if (deletePendingId) {
+      return;
+    }
+    setDeletePendingId(pageId);
+    try {
+      const response = await fetch(`/api/pages/${pageId}`, {
+        method: 'DELETE'
+      });
+      if (!response.ok) {
+        return;
+      }
+      await loadList(selectedParentId);
+      await loadTree(selectedParentId);
+      await loadFolderOptions();
+    } finally {
+      setDeletePendingId(null);
+    }
+  };
+
   const renderTree = (parentId: string | null, depth: number) => {
     const key = parentId ?? rootKey;
     const children = treeMap[key] ?? [];
@@ -445,6 +466,16 @@ export default function NotesHierarchy() {
                     >
                       ↓
                     </button>
+                    {item.kind === 'folder' && (
+                      <button
+                        className="button button--ghost"
+                        type="button"
+                        onClick={() => handleDelete(item.id)}
+                        disabled={deletePendingId === item.id}
+                      >
+                        削除
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
