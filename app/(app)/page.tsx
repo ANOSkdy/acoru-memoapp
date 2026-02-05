@@ -40,6 +40,7 @@ export default async function HomePage() {
     from pages
     where workspace_id = ${workspaceId}
       and is_deleted = false
+      and kind = 'page'
     order by last_opened_at desc nulls last, updated_at desc
     limit 20
   `;
