@@ -71,7 +71,7 @@ export const POST = async (request: Request) => {
     expectedChallenge: challengeRow.challenge as string,
     expectedOrigin: origin,
     expectedRPID: rpID,
-    authenticator: {
+    credential: {
       credentialID: isoBase64URL.toBuffer(credential.credential_id as string),
       credentialPublicKey: isoBase64URL.toBuffer(credential.public_key as string),
       counter: Number(credential.counter ?? 0),
