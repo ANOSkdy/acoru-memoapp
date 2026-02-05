@@ -1,16 +1,8 @@
-import { requireUser } from '@/lib/auth';
+import { isAdminUser, requireUser } from '@/lib/auth';
 import { sql } from '@/lib/db';
 import SettingsClient from './SettingsClient';
 
 export const runtime = 'nodejs';
-
-const getAdminEmails = () =>
-  new Set(
-    (process.env.ADMIN_EMAILS ?? '')
-      .split(',')
-      .map((email) => email.trim().toLowerCase())
-      .filter(Boolean)
-  );
 
 type Preferences = {
   ui: {
@@ -37,11 +29,10 @@ export default async function SettingsPage() {
 
   let displayName = user.name;
   let mustChangePassword = false;
-  let role: string | null = null;
 
   if (sql) {
     const rows = await sql`
-      select display_name, must_change_password, role
+      select display_name, must_change_password
       from users
       where id = ${user.id}
       limit 1;
@@ -49,7 +40,6 @@ export default async function SettingsPage() {
     if (rows[0]) {
       displayName = rows[0].display_name ?? displayName;
       mustChangePassword = Boolean(rows[0].must_change_password);
-      role = rows[0].role ?? null;
     }
   }
 
@@ -82,8 +72,7 @@ export default async function SettingsPage() {
     }
   }
 
-  const adminEmails = getAdminEmails();
-  const isAdmin = adminEmails.has(user.email.toLowerCase()) || role === 'admin';
+  const isAdmin = await isAdminUser(user.id);
 
   return (
     <SettingsClient

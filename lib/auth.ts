@@ -74,3 +74,18 @@ export const requireUser = async (): Promise<SessionUser> => {
 
   return user;
 };
+
+export const isAdminUser = async (userId: string): Promise<boolean> => {
+  if (!sql) {
+    return false;
+  }
+
+  const rows = await sql`
+    select is_admin
+    from users
+    where id = ${userId}
+    limit 1;
+  `;
+
+  return Boolean(rows[0]?.is_admin);
+};
