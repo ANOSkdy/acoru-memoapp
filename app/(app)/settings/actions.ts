@@ -102,8 +102,7 @@ export const changePassword = async (
 
   await sql`
     update users
-    set password_hash = ${newHash},
-        must_change_password = false
+    set password_hash = ${newHash}
     where id = ${user.id};
   `;
 
@@ -168,8 +167,7 @@ export const adminCreateUser = async (
   const parsed = adminCreateUserSchema.safeParse({
     email: String(formData.get('email') ?? '').trim().toLowerCase(),
     name: String(formData.get('name') ?? '').trim() || undefined,
-    role: String(formData.get('role') ?? 'user'),
-    mustChangePassword: Boolean(formData.get('mustChangePassword'))
+    isAdmin: Boolean(formData.get('isAdmin'))
   });
 
   if (!parsed.success) {
@@ -184,16 +182,13 @@ export const adminCreateUser = async (
   const passwordHash = await hashPassword(tempPassword);
   const displayName = parsed.data.name || parsed.data.email.split('@')[0] || 'User';
 
-  const isAdminRole = parsed.data.role === 'admin';
   const rows = await sql`
-    insert into users (email, display_name, password_hash, role, is_admin, must_change_password)
+    insert into users (email, display_name, password_hash, is_admin)
     values (
       ${parsed.data.email},
       ${displayName},
       ${passwordHash},
-      ${parsed.data.role},
-      ${isAdminRole},
-      ${parsed.data.mustChangePassword}
+      ${parsed.data.isAdmin}
     )
     on conflict (email)
     do nothing

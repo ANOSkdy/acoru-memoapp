@@ -42,8 +42,7 @@ export const adminCreateUserSchema = z.object({
     .trim()
     .max(120, '名前は120文字以内で入力してください。')
     .optional(),
-  role: z.enum(['user', 'admin']).default('user'),
-  mustChangePassword: z.boolean().default(true)
+  isAdmin: z.boolean().default(false)
 });
 
 export type PreferencesInput = z.infer<typeof preferencesSchema>;

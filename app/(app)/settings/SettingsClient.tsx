@@ -31,7 +31,6 @@ type SettingsClientProps = {
   user: {
     email: string;
     displayName: string;
-    mustChangePassword: boolean;
   };
   preferences: Preferences;
   isAdmin: boolean;
@@ -142,11 +141,6 @@ export default function SettingsClient({ user, preferences, isAdmin }: SettingsC
           <h2>セキュリティ</h2>
           <p>パスワードを変更します。</p>
         </div>
-        {user.mustChangePassword ? (
-          <p className="settings-warning">
-            初回ログインのため、パスワード変更が必要です。
-          </p>
-        ) : null}
         <form action={passwordAction} className="settings-form">
           <div className="settings-field">
             <label className="settings-label" htmlFor="currentPassword">
@@ -318,23 +312,13 @@ export default function SettingsClient({ user, preferences, isAdmin }: SettingsC
               ) : null}
             </div>
             <div className="settings-field">
-              <label className="settings-label" htmlFor="adminRole">
-                権限
-              </label>
-              <select className="settings-select" id="adminRole" name="role">
-                <option value="user">一般</option>
-                <option value="admin">管理者</option>
-              </select>
-            </div>
-            <div className="settings-field settings-checkbox">
               <label className="settings-checkbox__label">
                 <input
                   className="settings-checkbox__input"
                   type="checkbox"
-                  name="mustChangePassword"
-                  defaultChecked
+                  name="isAdmin"
                 />
-                初回ログイン時にパスワード変更を必須にする
+                管理者として発行する
               </label>
             </div>
             {adminState.error ? (

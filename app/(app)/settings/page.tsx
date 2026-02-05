@@ -28,18 +28,16 @@ export default async function SettingsPage() {
   const user = await requireUser();
 
   let displayName = user.name;
-  let mustChangePassword = false;
 
   if (sql) {
     const rows = await sql`
-      select display_name, must_change_password
+      select display_name
       from users
       where id = ${user.id}
       limit 1;
     `;
     if (rows[0]) {
       displayName = rows[0].display_name ?? displayName;
-      mustChangePassword = Boolean(rows[0].must_change_password);
     }
   }
 
@@ -78,8 +76,7 @@ export default async function SettingsPage() {
     <SettingsClient
       user={{
         email: user.email,
-        displayName,
-        mustChangePassword
+        displayName
       }}
       preferences={preferences}
       isAdmin={isAdmin}
