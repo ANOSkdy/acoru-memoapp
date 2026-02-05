@@ -401,11 +401,7 @@ export default function NotesHierarchy() {
         <div className="notes-list">
           <div className="notes-list__header">
             <div>
-              <div className="badge">Current folder</div>
               <h2>{currentFolderLabel}</h2>
-              <p className="notes-list__subtitle">
-                選択中のフォルダ内のメモを表示します。
-              </p>
             </div>
             <div className="notes-list__actions">
               <button

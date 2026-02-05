@@ -301,6 +301,10 @@ a {
   gap: 24px;
 }
 
+.notes-page {
+  margin-top: -24px;
+}
+
 .notes-tree {
   padding: 16px;
   border-radius: var(--radius-md);
@@ -965,6 +969,10 @@ a {
 
   .app-main {
     padding: 32px 24px 48px;
+  }
+
+  .notes-page {
+    margin-top: -32px;
   }
 
   .block-list {

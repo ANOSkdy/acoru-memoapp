@@ -15,17 +15,7 @@ export default async function NotesPage() {
   }
 
   return (
-    <div className="home">
-      <div className="home-header">
-        <div>
-          <div className="badge">All notes</div>
-          <h1>メモ一覧</h1>
-          <p className="home-subtitle">
-            フォルダツリーと配下メモをまとめて管理できます。
-          </p>
-        </div>
-      </div>
-
+    <div className="home notes-page">
       <NotesHierarchy />
     </div>
   );
