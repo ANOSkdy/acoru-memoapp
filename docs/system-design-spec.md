@@ -145,7 +145,7 @@ Notionの“ブロック思想”は踏襲しつつ、ブロック種類を絞�
 
 ## 7. データ設計（Neon Postgres想定）
 
-> DBは“ページ/ブロック/タグ/履歴”に限定し、DB複雑化を抑えます。
+> DBは“ページ/ブロック/履歴”に限定し、DB複雑化を抑えます。
 
 ### 7.1 主要テーブル案
 - `users`
@@ -159,10 +159,6 @@ Notionの“ブロック思想”は踏襲しつつ、ブロック種類を絞�
   - `id`, `page_id`, `type`, `content_json`
   - `order_index`（並び順）
   - `created_at`, `updated_at`
-- `tags`
-  - `id`, `workspace_id`, `name`, `color`（任意）
-- `page_tags`
-  - `page_id`, `tag_id`
 - `page_revisions`（軽量履歴）
   - `id`, `page_id`, `snapshot_json`, `created_at`, `created_by`
 
@@ -177,10 +173,10 @@ Notionの“ブロック思想”は踏襲しつつ、ブロック種類を絞�
 ## 8. API設計（Route handler想定・例）
 
 ### 8.1 ページ
-- `GET /api/pages?scope=recent|all|favorites&tag=...&folder=...`
+- `GET /api/pages?scope=recent|all|favorites&folder=...`
 - `POST /api/pages`（新規）
 - `GET /api/pages/:id`
-- `PATCH /api/pages/:id`（タイトル/タグ/削除フラグ）
+- `PATCH /api/pages/:id`（タイトル/削除フラグ）
 - `POST /api/pages/:id/restore`
 - `DELETE /api/pages/:id`（完全削除）
 

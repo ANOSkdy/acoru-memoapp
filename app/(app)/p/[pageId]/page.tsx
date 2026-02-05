@@ -117,26 +117,6 @@ export default async function PageEditorPage({
 
   const blocks = normalizeBlockRows(blockRows);
 
-  const tagRows = await sql`
-    select
-      id,
-      name,
-      color
-    from tags
-    where workspace_id = ${workspaceId}
-    order by lower(name) asc
-  `;
-
-  const pageTagRows = await sql`
-    select tag_id as "tagId"
-    from page_tags
-    join tags on page_tags.tag_id = tags.id
-    where page_tags.page_id = ${pageId}
-      and tags.workspace_id = ${workspaceId}
-  `;
-
-  const initialTagIds = pageTagRows.map((row) => row.tagId as string);
-
   return (
     <PageEditor
       pageId={pageId}
@@ -144,8 +124,6 @@ export default async function PageEditorPage({
       initialBlocks={blocks}
       initialRevision={pageInfo.contentRevision ?? 0}
       initialIsFavorite={pageInfo.isFavorite ?? false}
-      initialTags={tagRows as { id: string; name: string; color: string | null }[]}
-      initialTagIds={initialTagIds}
     />
   );
 }
