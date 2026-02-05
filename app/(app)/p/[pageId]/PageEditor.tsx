@@ -470,6 +470,13 @@ export default function PageEditor({
     });
   };
 
+  const statusLabel =
+    saveStatus === "Saving"
+      ? "Saving…"
+      : saveStatus === "Error"
+        ? "保存に失敗しました。"
+        : null;
+
   return (
     <div className="editor-shell">
       <div className="editor-header">
@@ -481,10 +488,11 @@ export default function PageEditor({
           aria-label="ページタイトル"
         />
         <div className="editor-status-row">
-          <div className="editor-status">
-            <span>保存状態:</span>
-            <strong>{saveStatus === "Saving" ? "Saving…" : saveStatus}</strong>
-          </div>
+          {statusLabel && (
+            <div className="editor-status">
+              <strong>{statusLabel}</strong>
+            </div>
+          )}
           <div className="editor-actions">
             <button
               className="button button--ghost"
