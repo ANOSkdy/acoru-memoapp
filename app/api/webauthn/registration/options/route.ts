@@ -1,5 +1,4 @@
 import { generateRegistrationOptions } from '@simplewebauthn/server';
-import type { AuthenticatorTransportFuture } from '@simplewebauthn/server';
 import { NextResponse } from 'next/server';
 import { requireUser } from '@/lib/auth';
 import { getSessionTokenFromCookies } from '@/lib/auth/session-token';
@@ -8,7 +7,9 @@ import { getRpConfig } from '@/lib/webauthn/config';
 
 export const runtime = 'nodejs';
 
-const allowedTransports = new Set<AuthenticatorTransportFuture>([
+type AuthenticatorTransport = 'usb' | 'ble' | 'nfc' | 'internal' | 'cable' | 'hybrid' | 'smart-card';
+
+const allowedTransports = new Set<AuthenticatorTransport>([
   'usb',
   'ble',
   'nfc',
@@ -18,13 +19,13 @@ const allowedTransports = new Set<AuthenticatorTransportFuture>([
   'smart-card'
 ]);
 
-const normalizeTransports = (value: unknown): AuthenticatorTransportFuture[] | undefined => {
+const normalizeTransports = (value: unknown): AuthenticatorTransport[] | undefined => {
   if (!Array.isArray(value)) {
     return undefined;
   }
   const filtered = value.filter(
-    (item): item is AuthenticatorTransportFuture =>
-      typeof item === 'string' && allowedTransports.has(item as AuthenticatorTransportFuture)
+    (item): item is AuthenticatorTransport =>
+      typeof item === 'string' && allowedTransports.has(item as AuthenticatorTransport)
   );
   return filtered.length > 0 ? filtered : undefined;
 };
