@@ -1,12 +1,35 @@
+import { notFound } from 'next/navigation';
+
+import TagsManager from './TagsManager';
+import { requireUser } from '@/lib/auth';
+import { sql } from '@/lib/db';
+import { getWorkspaceIdForUser } from '@/lib/workspaces';
+
 export const runtime = 'nodejs';
 
-export default function TagsPage() {
-  return (
-    <div className="center-stack">
-      <h1>Tags</h1>
-      <p style={{ color: 'var(--color-text-muted)' }}>
-        Tags screen placeholder. Group notes by topic.
-      </p>
-    </div>
-  );
+export default async function TagsPage() {
+  if (!sql) {
+    throw new Error('Database not configured.');
+  }
+
+  const user = await requireUser();
+  const workspaceId = await getWorkspaceIdForUser(user.id);
+
+  if (!workspaceId) {
+    notFound();
+  }
+
+  const tags = await sql`
+    select
+      id,
+      name,
+      color,
+      created_at as "createdAt",
+      updated_at as "updatedAt"
+    from tags
+    where workspace_id = ${workspaceId}
+    order by lower(name) asc
+  `;
+
+  return <TagsManager initialTags={tags} />;
 }
