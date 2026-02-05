@@ -492,6 +492,18 @@ export default function NotesHierarchy() {
             <div className="notes-detail__empty">Loading...</div>
           ) : selectedPageId ? (
             <div className="notes-detail__body">
+              <label className="notes-detail__field">
+                <span className="notes-detail__label">メモタイトル</span>
+                <input
+                  className="notes-detail__title-input"
+                  value={selectedPageTitle}
+                  onChange={(event) => {
+                    setSelectedPageTitle(event.target.value);
+                    setIsDirty(true);
+                  }}
+                  placeholder="メモのタイトルを入力してください。"
+                />
+              </label>
               <textarea
                 className="notes-detail__textarea"
                 value={memoText}
