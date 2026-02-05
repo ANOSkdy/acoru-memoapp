@@ -15,6 +15,8 @@ type PageEditorProps = {
   initialBlocks: FlatBlock[];
   initialRevision: number;
   initialIsFavorite: boolean;
+  initialTags: { id: string; name: string; color: string | null }[];
+  initialTagIds: string[];
 };
 
 type SaveStatus = "Saved" | "Saving" | "Error";
@@ -111,6 +113,8 @@ export default function PageEditor({
   initialBlocks,
   initialRevision,
   initialIsFavorite,
+  initialTags,
+  initialTagIds,
 }: PageEditorProps) {
   const [title, setTitle] = useState(initialTitle);
   const [blocks, setBlocks] = useState<FlatBlock[]>(initialBlocks);
@@ -127,6 +131,10 @@ export default function PageEditor({
   const [isFavorite, setIsFavorite] = useState(initialIsFavorite);
   const [favoritePending, setFavoritePending] = useState(false);
   const [favoriteError, setFavoriteError] = useState<string | null>(null);
+  const [selectedTagIds, setSelectedTagIds] =
+    useState<string[]>(initialTagIds);
+  const [tagsPending, setTagsPending] = useState(false);
+  const [tagsError, setTagsError] = useState<string | null>(null);
 
   const router = useRouter();
   const isSavingRef = useRef(false);
@@ -303,6 +311,43 @@ export default function PageEditor({
     }
   }, [favoritePending, isFavorite, pageId, router]);
 
+  const handleTagToggle = useCallback(
+    async (tagId: string) => {
+      if (tagsPending) {
+        return;
+      }
+
+      const previous = selectedTagIds;
+      const next = selectedTagIds.includes(tagId)
+        ? selectedTagIds.filter((id) => id !== tagId)
+        : [...selectedTagIds, tagId];
+
+      setSelectedTagIds(next);
+      setTagsPending(true);
+      setTagsError(null);
+
+      try {
+        const response = await fetch(`/api/pages/${pageId}/tags`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tagIds: next }),
+        });
+
+        if (!response.ok) {
+          throw new Error("タグの更新に失敗しました。");
+        }
+      } catch (error) {
+        setSelectedTagIds(previous);
+        setTagsError(
+          error instanceof Error ? error.message : "タグの更新に失敗しました。"
+        );
+      } finally {
+        setTagsPending(false);
+      }
+    },
+    [pageId, selectedTagIds, tagsPending]
+  );
+
   useEffect(() => {
     if (skipAutosaveRef.current) {
       skipAutosaveRef.current = false;
@@ -458,6 +503,63 @@ export default function PageEditor({
               ゴミ箱へ移動
             </button>
           </div>
+        </div>
+        <div className="editor-tags-row">
+          <details className="editor-tags">
+            <summary>Tags</summary>
+            <div className="editor-tags__panel">
+              {initialTags.length === 0 ? (
+                <p className="editor-tags__empty">
+                  まだタグがありません。<a href="/tags">/tags</a> で作成します。
+                </p>
+              ) : (
+                <div className="editor-tags__list">
+                  {initialTags.map((tag) => {
+                    const isChecked = selectedTagIds.includes(tag.id);
+                    return (
+                      <label className="editor-tags__item" key={tag.id}>
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => handleTagToggle(tag.id)}
+                          disabled={tagsPending}
+                        />
+                        <span
+                          className="editor-tags__swatch"
+                          style={{
+                            backgroundColor: tag.color ?? "transparent",
+                            borderColor: tag.color
+                              ? "transparent"
+                              : "var(--color-border)",
+                          }}
+                        />
+                        <span>{tag.name}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+              <p className="editor-tags__hint">
+                タグの作成は <a href="/tags">/tags</a> から行えます。
+              </p>
+              {tagsError && (
+                <p className="editor-tags__error" role="status">
+                  {tagsError}
+                </p>
+              )}
+            </div>
+          </details>
+          {selectedTagIds.length > 0 && (
+            <div className="editor-tags__active">
+              {initialTags
+                .filter((tag) => selectedTagIds.includes(tag.id))
+                .map((tag) => (
+                  <span className="editor-tags__badge" key={tag.id}>
+                    {tag.name}
+                  </span>
+                ))}
+            </div>
+          )}
         </div>
         {favoriteError && (
           <p className="editor-favorite-error" role="status">
