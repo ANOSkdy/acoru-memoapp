@@ -27,6 +27,11 @@ body {
   background: var(--color-bg);
 }
 
+body.drawer-open {
+  overflow: hidden;
+  touch-action: none;
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -34,8 +39,10 @@ a {
 
 .app-shell {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   background: var(--color-bg);
+  overflow-x: hidden;
 }
 
 .app-sidebar {
@@ -46,6 +53,7 @@ a {
   position: sticky;
   top: 0;
   height: 100vh;
+  height: 100dvh;
   display: none;
 }
 
@@ -75,19 +83,28 @@ a {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 0;
 }
 
 .app-header {
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
-  padding: 16px 24px;
+  padding: 12px 16px;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
   position: sticky;
   top: 0;
   z-index: 10;
+}
+
+.app-header__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
 }
 
 .app-header__title {
@@ -96,15 +113,20 @@ a {
 }
 
 .app-header__actions {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .app-main {
-  padding: 32px 24px 48px;
+  padding: 24px 16px 48px;
   max-width: 960px;
   width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
 .badge {
@@ -126,47 +148,81 @@ a {
   border: 1px solid var(--color-border);
 }
 
-.drawer {
-  display: block;
+.mobile-drawer {
+  display: flex;
 }
 
-.drawer summary {
+.mobile-drawer__trigger {
   list-style: none;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px;
+  padding: 10px 14px;
   border-radius: var(--radius-sm);
   background: var(--color-surface-muted);
   border: 1px solid var(--color-border);
   font-size: 14px;
+  min-height: 44px;
 }
 
-.drawer summary::-webkit-details-marker {
-  display: none;
+.mobile-drawer__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(19, 21, 28, 0.4);
+  z-index: 20;
 }
 
-.drawer__panel {
-  margin-top: 12px;
-  padding: 16px;
-  border-radius: var(--radius-md);
+.mobile-drawer__panel {
+  position: fixed;
+  inset: 0 30% 0 0;
+  max-width: 320px;
+  width: min(85vw, 320px);
   background: var(--color-surface);
   box-shadow: var(--shadow-md);
-  border: 1px solid var(--color-border);
+  border-right: 1px solid var(--color-border);
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  z-index: 30;
 }
 
-.drawer__nav {
+.mobile-drawer__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mobile-drawer__title {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.mobile-drawer__close {
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-muted);
+  min-height: 40px;
+  cursor: pointer;
+}
+
+.mobile-drawer__nav {
   display: grid;
   gap: 8px;
 }
 
-.drawer__link {
-  padding: 10px 12px;
+.mobile-drawer__link {
+  padding: 12px 12px;
   border-radius: var(--radius-sm);
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
 }
 
-.drawer__link:hover {
+.mobile-drawer__link:hover {
   background: var(--color-surface-muted);
 }
 
@@ -428,6 +484,7 @@ a {
   font-weight: 600;
   font-size: 14px;
   cursor: pointer;
+  min-height: 44px;
 }
 
 .button:disabled {
@@ -451,6 +508,8 @@ a {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  flex: 1;
+  min-height: 0;
 }
 
 .editor-header {
@@ -616,6 +675,10 @@ a {
 .block-list {
   display: grid;
   gap: 16px;
+  min-height: 60dvh;
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 12px;
 }
 
 .block-card {
@@ -673,6 +736,7 @@ a {
   font-size: 15px;
   line-height: 1.5;
   resize: vertical;
+  min-height: 120px;
 }
 
 .block-divider {
@@ -701,12 +765,30 @@ a {
     display: block;
   }
 
-  .drawer {
+  .mobile-drawer {
     display: none;
   }
 
   .home-header {
     flex-direction: row;
     align-items: center;
+  }
+
+  .app-header {
+    padding: 16px 24px;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .app-header__row {
+    width: auto;
+  }
+
+  .app-main {
+    padding: 32px 24px 48px;
+  }
+
+  .block-list {
+    min-height: 0;
   }
 }
