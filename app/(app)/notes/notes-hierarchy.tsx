@@ -110,7 +110,8 @@ export default function NotesHierarchy() {
         data?: { items: PageNode[] };
       };
       if (payload.ok && payload.data) {
-        setTreeMap((prev) => ({ ...prev, [key]: payload.data.items }));
+        const items = payload.data.items ?? [];
+        setTreeMap((prev) => ({ ...prev, [key]: items }));
       }
     } finally {
       setLoadingTree((prev) => ({ ...prev, [key]: false }));
