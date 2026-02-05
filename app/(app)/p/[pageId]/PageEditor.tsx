@@ -3,11 +3,7 @@
 import { useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import {
-  type BlockType,
-  type FlatBlock,
-  blockTypes,
-} from "@/lib/blocks";
+import { type FlatBlock } from "@/lib/blocks";
 
 type PageEditorProps = {
   pageId: string;
@@ -17,89 +13,6 @@ type PageEditorProps = {
   initialIsFavorite: boolean;
 };
 
-
-const editorBlockTypes = blockTypes.filter(
-  (type) => type !== "image"
-) as BlockType[];
-
-const blockTypeLabels: Record<BlockType, string> = {
-  paragraph: "Paragraph",
-  heading: "Heading",
-  bulleted_list: "Bulleted list",
-  numbered_list: "Numbered list",
-  todo: "To-do",
-  toggle: "Toggle",
-  quote: "Quote",
-  divider: "Divider",
-  callout: "Callout",
-  image: "Image",
-};
-
-const createBlock = (pageId: string, type: BlockType): FlatBlock => {
-  const id = crypto.randomUUID();
-  switch (type) {
-    case "heading":
-      return {
-        id,
-        pageId,
-        parentBlockId: null,
-        type,
-        indent: 0,
-        orderIndex: 0,
-        content: { level: 1, text: "" },
-      };
-    case "todo":
-      return {
-        id,
-        pageId,
-        parentBlockId: null,
-        type,
-        indent: 0,
-        orderIndex: 0,
-        content: { text: "", checked: false },
-      };
-    case "divider":
-      return {
-        id,
-        pageId,
-        parentBlockId: null,
-        type,
-        indent: 0,
-        orderIndex: 0,
-        content: {},
-      };
-    case "callout":
-      return {
-        id,
-        pageId,
-        parentBlockId: null,
-        type,
-        indent: 0,
-        orderIndex: 0,
-        content: { text: "", emoji: "💡" },
-      };
-    case "image":
-      return {
-        id,
-        pageId,
-        parentBlockId: null,
-        type,
-        indent: 0,
-        orderIndex: 0,
-        content: { url: "" },
-      };
-    default:
-      return {
-        id,
-        pageId,
-        parentBlockId: null,
-        type,
-        indent: 0,
-        orderIndex: 0,
-        content: { text: "" },
-      };
-  }
-};
 
 const getBlockText = (block: FlatBlock) =>
   "text" in block.content ? block.content.text : "";
@@ -218,13 +131,13 @@ export default function PageEditor({
       }
 
       if (Array.isArray(blocksData.blocks)) {
-      setBlocks(blocksData.blocks);
-    }
+        setBlocks(blocksData.blocks);
+      }
 
-    setConflictState({ active: false, dismissed: false });
-    setSaveError(null);
-    setFavoriteError(null);
-  } catch (error) {
+      setConflictState({ active: false, dismissed: false });
+      setSaveError(null);
+      setFavoriteError(null);
+    } catch (error) {
       setSaveError(
         error instanceof Error ? error.message : "再読み込みに失敗しました。"
       );
@@ -296,14 +209,6 @@ export default function PageEditor({
         currentIndex === index ? nextBlock : block
       )
     );
-  };
-
-  const removeBlock = (index: number) => {
-    setBlocks((prev) => prev.filter((_, currentIndex) => currentIndex !== index));
-  };
-
-  const handleTypeChange = (index: number, type: BlockType) => {
-    updateBlock(index, createBlock(pageId, type));
   };
 
   const handleTextChange = (index: number, text: string) => {
@@ -400,7 +305,8 @@ export default function PageEditor({
               onClick={() => void saveNow()}
               disabled={isSaving}
             >
-              Save
+              <span aria-hidden="true">💾</span>
+              <span className="sr-only">保存</span>
             </button>
             <button
               className="button button--ghost"
@@ -408,7 +314,10 @@ export default function PageEditor({
               onClick={handleToggleFavorite}
               disabled={favoritePending}
             >
-              {isFavorite ? "★ お気に入り解除" : "☆ お気に入り"}
+              <span aria-hidden="true">{isFavorite ? "★" : "☆"}</span>
+              <span className="sr-only">
+                {isFavorite ? "お気に入り解除" : "お気に入り"}
+              </span>
             </button>
             <button
               className="button button--ghost"
@@ -416,7 +325,8 @@ export default function PageEditor({
               onClick={handleMoveToTrash}
               disabled={trashPending}
             >
-              ゴミ箱へ移動
+              <span aria-hidden="true">🗑️</span>
+              <span className="sr-only">ゴミ箱へ移動</span>
             </button>
           </div>
         </div>
@@ -493,33 +403,6 @@ export default function PageEditor({
       <div className="block-list">
         {blocks.map((block, index) => (
           <div className="block-card" key={block.id}>
-            <div className="block-row">
-              <label className="block-label" htmlFor={`block-type-${block.id}`}>
-                Type
-              </label>
-              <select
-                id={`block-type-${block.id}`}
-                className="block-select"
-                value={block.type}
-                onChange={(event) =>
-                  handleTypeChange(index, event.target.value as BlockType)
-                }
-              >
-                {editorBlockTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {blockTypeLabels[type]}
-                  </option>
-                ))}
-              </select>
-              <button
-                className="button button--ghost"
-                type="button"
-                onClick={() => removeBlock(index)}
-              >
-                Delete
-              </button>
-            </div>
-
             {block.type === "heading" && (
               <div className="block-row">
                 <label className="block-label">Level</label>
@@ -596,16 +479,6 @@ export default function PageEditor({
           </div>
         ))}
       </div>
-
-      <button
-        className="button editor-add"
-        type="button"
-        onClick={() =>
-          setBlocks((prev) => [...prev, createBlock(pageId, "paragraph")])
-        }
-      >
-        + Add block
-      </button>
     </div>
   );
 }
