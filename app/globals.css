@@ -268,6 +268,27 @@ a {
   box-shadow: var(--shadow-sm);
 }
 
+.home-list__item-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.home-list__item-link {
+  display: grid;
+  gap: 4px;
+  flex: 1;
+  text-decoration: none;
+  color: inherit;
+}
+
+.home-list__item-actions {
+  display: grid;
+  gap: 8px;
+  min-width: 120px;
+}
+
 .home-list__item:hover {
   border-color: color-mix(in srgb, var(--color-primary) 40%, var(--color-border));
 }
@@ -310,6 +331,12 @@ a {
   border-color: var(--color-border);
 }
 
+.button--danger {
+  background: #c0392b;
+  border-color: #c0392b;
+  color: white;
+}
+
 .editor-shell {
   display: flex;
   flex-direction: column;
@@ -320,6 +347,14 @@ a {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.editor-status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .editor-title-input {

@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
 
 import PageEditor from "./PageEditor";
@@ -66,20 +66,38 @@ export default async function PageEditorPage({
 
   const pageId = params.pageId;
 
-  const pageRows = await sql`
+  const pageInfoRows = await sql`
+    select
+      id,
+      title,
+      content_revision as "contentRevision",
+      is_deleted as "isDeleted"
+    from pages
+    where id = ${pageId}
+      and workspace_id = ${workspaceId}
+  `;
+
+  if (pageInfoRows.length === 0) {
+    notFound();
+  }
+
+  const pageInfo = pageInfoRows[0] as {
+    id: string;
+    title: string | null;
+    contentRevision: number | null;
+    isDeleted: boolean | null;
+  };
+
+  if (pageInfo.isDeleted) {
+    redirect("/trash");
+  }
+
+  await sql`
     update pages
     set last_opened_at = now()
     where id = ${pageId}
       and workspace_id = ${workspaceId}
-    returning
-      id,
-      title,
-      content_revision as "contentRevision"
   `;
-
-  if (pageRows.length === 0) {
-    notFound();
-  }
 
   const blockRows = await sql`
     select
@@ -100,9 +118,9 @@ export default async function PageEditorPage({
   return (
     <PageEditor
       pageId={pageId}
-      initialTitle={pageRows[0]?.title ?? ""}
+      initialTitle={pageInfo.title ?? ""}
       initialBlocks={blocks}
-      initialRevision={pageRows[0]?.contentRevision ?? 0}
+      initialRevision={pageInfo.contentRevision ?? 0}
     />
   );
 }
