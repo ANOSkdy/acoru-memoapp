@@ -419,6 +419,138 @@ a {
   color: var(--color-text-muted);
 }
 
+.settings-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+.settings-header h1 {
+  margin: 8px 0 0;
+}
+
+.settings-subtitle {
+  margin: 6px 0 0;
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+
+.settings-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.settings-card__header h2 {
+  margin: 0;
+}
+
+.settings-card__header p {
+  margin: 4px 0 0;
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+
+.settings-form {
+  display: grid;
+  gap: 16px;
+}
+
+.settings-field {
+  display: grid;
+  gap: 6px;
+}
+
+.settings-label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.settings-input,
+.settings-select {
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-muted);
+  color: var(--color-text);
+  font-size: 14px;
+  min-height: 44px;
+}
+
+.settings-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.settings-error {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: 13px;
+}
+
+.settings-success {
+  margin: 0;
+  color: var(--color-success);
+  font-size: 13px;
+}
+
+.settings-warning {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-warning);
+  background: rgba(244, 208, 63, 0.15);
+  font-size: 13px;
+}
+
+.settings-checkbox {
+  gap: 10px;
+}
+
+.settings-checkbox__label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.settings-checkbox__input {
+  width: 18px;
+  height: 18px;
+}
+
+.settings-temp {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+  display: grid;
+  gap: 12px;
+}
+
+.settings-temp__header {
+  font-weight: 600;
+}
+
+.settings-temp__note {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.settings-temp__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.settings-temp__row .settings-input {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
 .home-list {
   display: grid;
   gap: 12px;
