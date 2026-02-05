@@ -4,31 +4,9 @@ import { requireUser } from '@/lib/auth';
 import { getSessionTokenFromCookies } from '@/lib/auth/session-token';
 import { sql } from '@/lib/db';
 import { getRpConfig } from '@/lib/webauthn/config';
+import { toAuthenticatorTransports } from '@/lib/webauthn/transports';
 
 export const runtime = 'nodejs';
-
-type AuthenticatorTransport = 'usb' | 'ble' | 'nfc' | 'internal' | 'cable' | 'hybrid' | 'smart-card';
-
-const allowedTransports = new Set<AuthenticatorTransport>([
-  'usb',
-  'ble',
-  'nfc',
-  'internal',
-  'cable',
-  'hybrid',
-  'smart-card'
-]);
-
-const normalizeTransports = (value: unknown): AuthenticatorTransport[] | undefined => {
-  if (!Array.isArray(value)) {
-    return undefined;
-  }
-  const filtered = value.filter(
-    (item): item is AuthenticatorTransport =>
-      typeof item === 'string' && allowedTransports.has(item as AuthenticatorTransport)
-  );
-  return filtered.length > 0 ? filtered : undefined;
-};
 
 export const POST = async (request: Request) => {
   const user = await requireUser();
@@ -59,7 +37,7 @@ export const POST = async (request: Request) => {
     allowCredentials: credentials.map((credential) => ({
       id: credential.credential_id as string,
       type: 'public-key',
-      transports: normalizeTransports(credential.transports)
+      transports: toAuthenticatorTransports(credential.transports)
     }))
   });
 

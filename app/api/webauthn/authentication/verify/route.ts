@@ -6,6 +6,7 @@ import { getSessionTokenFromCookies } from '@/lib/auth/session-token';
 import { sql } from '@/lib/db';
 import { authenticationVerifySchema } from '@/lib/validation/webauthn';
 import { getRpConfig } from '@/lib/webauthn/config';
+import { toAuthenticatorTransports } from '@/lib/webauthn/transports';
 
 export const runtime = 'nodejs';
 
@@ -75,7 +76,7 @@ export const POST = async (request: Request) => {
       credentialID: isoBase64URL.toBuffer(credential.credential_id as string),
       credentialPublicKey: isoBase64URL.toBuffer(credential.public_key as string),
       counter: Number(credential.counter ?? 0),
-      transports: (credential.transports as string[] | null) ?? undefined
+      transports: toAuthenticatorTransports(credential.transports)
     }
   });
 
