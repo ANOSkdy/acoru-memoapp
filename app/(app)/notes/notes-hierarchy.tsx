@@ -62,10 +62,10 @@ export default function NotesHierarchy() {
 
   const currentFolderLabel = selectedParentId
     ? folderLookup.get(selectedParentId) ?? DEFAULT_FOLDER_TITLE
-    : 'ルート';
+    : 'トップ';
 
   const folderOptions = useMemo<FolderOption[]>(() => {
-    const options: FolderOption[] = [{ id: null, title: 'ルート' }];
+    const options: FolderOption[] = [{ id: null, title: 'トップ' }];
     folders.forEach((folder) => {
       options.push({
         id: folder.id,
@@ -382,7 +382,7 @@ export default function NotesHierarchy() {
               type="button"
               onClick={() => setSelectedParentId(null)}
             >
-              🗂️ ルート
+              🗂️ トップ
             </button>
           </div>
           {loadingTree[rootKey] && (
