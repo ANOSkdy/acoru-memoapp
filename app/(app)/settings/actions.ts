@@ -2,7 +2,7 @@
 
 import { randomBytes } from 'crypto';
 import { revalidatePath } from 'next/cache';
-import { requireUser } from '@/lib/auth';
+import { isAdminUser, requireUser } from '@/lib/auth';
 import { hashPassword, verifyPassword } from '@/lib/auth/password';
 import { sql } from '@/lib/db';
 import {
@@ -30,35 +30,7 @@ const parseFieldErrors = (issues: { path: (string | number)[]; message: string }
   return fieldErrors;
 };
 
-const getAdminEmailSet = () => {
-  const raw = process.env.ADMIN_EMAILS ?? '';
-  return new Set(
-    raw
-      .split(',')
-      .map((email) => email.trim().toLowerCase())
-      .filter(Boolean)
-  );
-};
-
-const ensureAdmin = async (userId: string, email: string) => {
-  if (!sql) {
-    return false;
-  }
-
-  const adminEmails = getAdminEmailSet();
-  if (adminEmails.has(email.toLowerCase())) {
-    return true;
-  }
-
-  const rows = await sql`
-    select role
-    from users
-    where id = ${userId}
-    limit 1;
-  `;
-
-  return rows[0]?.role === 'admin';
-};
+const ensureAdmin = async (userId: string) => isAdminUser(userId);
 
 export const updateProfile = async (
   _prevState: ActionState,
@@ -130,8 +102,7 @@ export const changePassword = async (
 
   await sql`
     update users
-    set password_hash = ${newHash},
-        must_change_password = false
+    set password_hash = ${newHash}
     where id = ${user.id};
   `;
 
@@ -188,7 +159,7 @@ export const adminCreateUser = async (
 ): Promise<ActionState> => {
   const user = await requireUser();
 
-  const isAdmin = await ensureAdmin(user.id, user.email);
+  const isAdmin = await ensureAdmin(user.id);
   if (!isAdmin) {
     return { error: '管理者のみ利用できます。' };
   }
@@ -196,8 +167,7 @@ export const adminCreateUser = async (
   const parsed = adminCreateUserSchema.safeParse({
     email: String(formData.get('email') ?? '').trim().toLowerCase(),
     name: String(formData.get('name') ?? '').trim() || undefined,
-    role: String(formData.get('role') ?? 'user'),
-    mustChangePassword: Boolean(formData.get('mustChangePassword'))
+    isAdmin: Boolean(formData.get('isAdmin'))
   });
 
   if (!parsed.success) {
@@ -213,13 +183,12 @@ export const adminCreateUser = async (
   const displayName = parsed.data.name || parsed.data.email.split('@')[0] || 'User';
 
   const rows = await sql`
-    insert into users (email, display_name, password_hash, role, must_change_password)
+    insert into users (email, display_name, password_hash, is_admin)
     values (
       ${parsed.data.email},
       ${displayName},
       ${passwordHash},
-      ${parsed.data.role},
-      ${parsed.data.mustChangePassword}
+      ${parsed.data.isAdmin}
     )
     on conflict (email)
     do nothing
