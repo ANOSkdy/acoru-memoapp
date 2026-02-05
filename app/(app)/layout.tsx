@@ -21,21 +21,22 @@ export default async function AppLayout({ children }: AppLayoutProps) {
 
   return (
     <div className="app-shell">
-      <aside className="app-sidebar">
-        <div className="app-sidebar__title">Acoru Memo</div>
-        <nav className="app-sidebar__nav">
-          {navItems.map((item) => (
-            <Link key={item.href} className="app-sidebar__link" href={item.href}>
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-      </aside>
       <div className="app-content">
         <header className="app-header">
           <div className="app-header__row">
             <MobileDrawer items={navItems} />
             <div className="app-header__title">Welcome back, {user.name}</div>
+            <nav className="app-header__menu" aria-label="Main navigation">
+              {navItems.map((item) => (
+                <Link
+                  key={item.href}
+                  className="app-header__link"
+                  href={item.href}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
           </div>
           <div className="app-header__actions">
             <div className="badge">Secure workspace</div>
