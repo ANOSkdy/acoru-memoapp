@@ -54,7 +54,7 @@ export const POST = async (request: Request) => {
 
   const { rpID } = getRpConfig(request);
 
-  const options = generateAuthenticationOptions({
+  const options = await generateAuthenticationOptions({
     rpID,
     allowCredentials: credentials.map((credential) => ({
       id: credential.credential_id as string,

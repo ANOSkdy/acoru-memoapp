@@ -50,7 +50,7 @@ export const POST = async (request: Request) => {
 
   const { rpID, rpName } = getRpConfig(request);
 
-  const options = generateRegistrationOptions({
+  const options = await generateRegistrationOptions({
     rpID,
     rpName,
     userID: user.id,
