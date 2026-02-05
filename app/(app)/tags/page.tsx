@@ -19,7 +19,7 @@ export default async function TagsPage() {
     notFound();
   }
 
-  const tags = await sql`
+  const tags = (await sql`
     select
       id,
       name,
@@ -29,7 +29,7 @@ export default async function TagsPage() {
     from tags
     where workspace_id = ${workspaceId}
     order by lower(name) asc
-  `;
+  `) as { id: string; name: string; color: string | null }[];
 
   return <TagsManager initialTags={tags} />;
 }
