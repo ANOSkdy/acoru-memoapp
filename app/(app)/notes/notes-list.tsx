@@ -9,6 +9,7 @@ import { type PageListItem } from '@/lib/pages';
 
 type NotesListProps = {
   items: PageListItem[];
+  showTrash?: boolean;
 };
 
 const formatUpdatedAt = (value: string | Date | null) => {
@@ -22,9 +23,12 @@ const formatUpdatedAt = (value: string | Date | null) => {
   }).format(date);
 };
 
-export default function NotesList({ items }: NotesListProps) {
+export default function NotesList({ items, showTrash = true }: NotesListProps) {
   const router = useRouter();
   const [pendingId, setPendingId] = useState<string | null>(null);
+  const [favoritePendingId, setFavoritePendingId] = useState<string | null>(
+    null
+  );
 
   const handleTrash = async (pageId: string) => {
     if (pendingId) {
@@ -41,6 +45,26 @@ export default function NotesList({ items }: NotesListProps) {
       router.refresh();
     } finally {
       setPendingId(null);
+    }
+  };
+
+  const handleFavorite = async (pageId: string, isFavorite: boolean) => {
+    if (favoritePendingId) {
+      return;
+    }
+    setFavoritePendingId(pageId);
+    try {
+      const response = await fetch(`/api/pages/${pageId}/favorite`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isFavorite })
+      });
+      if (!response.ok) {
+        throw new Error('Favorite failed');
+      }
+      router.refresh();
+    } finally {
+      setFavoritePendingId(null);
     }
   };
 
@@ -61,11 +85,21 @@ export default function NotesList({ items }: NotesListProps) {
               <button
                 className="button button--ghost"
                 type="button"
+                onClick={() => handleFavorite(page.id, !page.isFavorite)}
+                disabled={favoritePendingId === page.id}
+              >
+                {page.isFavorite ? '★ お気に入り解除' : '☆ お気に入り'}
+              </button>
+              {showTrash && (
+              <button
+                className="button button--ghost"
+                type="button"
                 onClick={() => handleTrash(page.id)}
                 disabled={pendingId === page.id}
               >
                 ゴミ箱へ
               </button>
+              )}
             </div>
           </div>
         </div>

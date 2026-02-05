@@ -71,7 +71,8 @@ export default async function PageEditorPage({
       id,
       title,
       content_revision as "contentRevision",
-      is_deleted as "isDeleted"
+      is_deleted as "isDeleted",
+      is_favorite as "isFavorite"
     from pages
     where id = ${pageId}
       and workspace_id = ${workspaceId}
@@ -86,6 +87,7 @@ export default async function PageEditorPage({
     title: string | null;
     contentRevision: number | null;
     isDeleted: boolean | null;
+    isFavorite: boolean | null;
   };
 
   if (pageInfo.isDeleted) {
@@ -121,6 +123,7 @@ export default async function PageEditorPage({
       initialTitle={pageInfo.title ?? ""}
       initialBlocks={blocks}
       initialRevision={pageInfo.contentRevision ?? 0}
+      initialIsFavorite={pageInfo.isFavorite ?? false}
     />
   );
 }

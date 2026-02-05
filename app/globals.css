@@ -357,6 +357,18 @@ a {
   flex-wrap: wrap;
 }
 
+.editor-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.editor-favorite-error {
+  margin: 0;
+  font-size: 13px;
+  color: #c0392b;
+}
+
 .editor-title-input {
   width: 100%;
   border-radius: var(--radius-md);
