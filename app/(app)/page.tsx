@@ -1,13 +1,12 @@
 import Link from 'next/link';
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 
 import { requireUser } from '@/lib/auth';
 import { sql } from '@/lib/db';
+import { createNewPage, DEFAULT_PAGE_TITLE } from '@/lib/pages';
 import { getWorkspaceIdForUser } from '@/lib/workspaces';
 
 export const runtime = 'nodejs';
-
-const DEFAULT_TITLE = 'Untitled';
 
 const formatUpdatedAt = (value: string | Date | null) => {
   if (!value) {
@@ -18,67 +17,6 @@ const formatUpdatedAt = (value: string | Date | null) => {
     dateStyle: 'medium',
     timeStyle: 'short'
   }).format(date);
-};
-
-const createNewPage = async () => {
-  'use server';
-
-  if (!sql) {
-    throw new Error('Database not configured.');
-  }
-
-  const user = await requireUser();
-  const workspaceId = await getWorkspaceIdForUser(user.id);
-
-  if (!workspaceId) {
-    notFound();
-  }
-
-  let pageId: string | undefined;
-
-  await sql`begin`;
-
-  try {
-    const pageRows = await sql`
-      insert into pages (workspace_id, title, last_opened_at)
-      values (${workspaceId}, ${DEFAULT_TITLE}, now())
-      returning id
-    `;
-
-    pageId = pageRows[0]?.id as string | undefined;
-
-    if (!pageId) {
-      throw new Error('Failed to create page.');
-    }
-
-    await sql`
-      insert into blocks (
-        id,
-        page_id,
-        parent_block_id,
-        type,
-        indent,
-        order_index,
-        content
-      )
-      values (
-        gen_random_uuid(),
-        ${pageId},
-        ${null},
-        ${'paragraph'},
-        ${0},
-        ${0},
-        ${JSON.stringify({ text: '' })}
-      )
-    `;
-
-    await sql`commit`;
-  } catch (error) {
-    await sql`rollback`;
-    throw error;
-  }
-
-  redirect(`/p/${pageId}`);
 };
 
 export default async function HomePage() {
@@ -134,7 +72,7 @@ export default async function HomePage() {
             {recentPages.map((page) => (
               <Link key={page.id} className="home-list__item" href={`/p/${page.id}`}>
                 <div className="home-list__title">
-                  {page.title || DEFAULT_TITLE}
+                  {page.title || DEFAULT_PAGE_TITLE}
                 </div>
                 <div className="home-list__meta">
                   最終更新: {formatUpdatedAt(page.updatedAt ?? page.lastOpenedAt)}
