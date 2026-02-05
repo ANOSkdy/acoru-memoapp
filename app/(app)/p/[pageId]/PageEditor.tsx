@@ -14,6 +14,7 @@ type PageEditorProps = {
   initialTitle: string;
   initialBlocks: FlatBlock[];
   initialRevision: number;
+  initialIsFavorite: boolean;
 };
 
 type SaveStatus = "Saved" | "Saving" | "Error";
@@ -109,6 +110,7 @@ export default function PageEditor({
   initialTitle,
   initialBlocks,
   initialRevision,
+  initialIsFavorite,
 }: PageEditorProps) {
   const [title, setTitle] = useState(initialTitle);
   const [blocks, setBlocks] = useState<FlatBlock[]>(initialBlocks);
@@ -122,6 +124,9 @@ export default function PageEditor({
   }>({ active: false, dismissed: false });
   const [autosavePaused, setAutosavePaused] = useState(false);
   const [trashPending, setTrashPending] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(initialIsFavorite);
+  const [favoritePending, setFavoritePending] = useState(false);
+  const [favoriteError, setFavoriteError] = useState<string | null>(null);
 
   const router = useRouter();
   const isSavingRef = useRef(false);
@@ -206,7 +211,7 @@ export default function PageEditor({
       }
 
       const pageData = (await pageResponse.json()) as {
-        page?: { title: string; contentRevision: number };
+        page?: { title: string; contentRevision: number; isFavorite?: boolean };
       };
       const blocksData = (await blocksResponse.json()) as {
         blocks?: FlatBlock[];
@@ -216,6 +221,9 @@ export default function PageEditor({
         setTitle(pageData.page.title ?? "");
         if (typeof pageData.page.contentRevision === "number") {
           setBaseRevision(pageData.page.contentRevision);
+        }
+        if (typeof pageData.page.isFavorite === "boolean") {
+          setIsFavorite(pageData.page.isFavorite);
         }
       }
 
@@ -227,6 +235,7 @@ export default function PageEditor({
       setAutosavePaused(false);
       setSaveStatus("Saved");
       setSaveError(null);
+      setFavoriteError(null);
       skipNextAutosaveRef.current = true;
     } catch (error) {
       setSaveError(
@@ -265,6 +274,34 @@ export default function PageEditor({
       setTrashPending(false);
     }
   }, [pageId, router, trashPending]);
+
+  const handleToggleFavorite = useCallback(async () => {
+    if (favoritePending) {
+      return;
+    }
+    setFavoritePending(true);
+    setFavoriteError(null);
+    try {
+      const response = await fetch(`/api/pages/${pageId}/favorite`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isFavorite: !isFavorite }),
+      });
+      if (!response.ok) {
+        throw new Error("お気に入りの更新に失敗しました。");
+      }
+      setIsFavorite((prev) => !prev);
+      router.refresh();
+    } catch (error) {
+      setFavoriteError(
+        error instanceof Error
+          ? error.message
+          : "お気に入りの更新に失敗しました。"
+      );
+    } finally {
+      setFavoritePending(false);
+    }
+  }, [favoritePending, isFavorite, pageId, router]);
 
   useEffect(() => {
     if (skipAutosaveRef.current) {
@@ -403,15 +440,30 @@ export default function PageEditor({
             <span>保存状態:</span>
             <strong>{saveStatus === "Saving" ? "Saving…" : saveStatus}</strong>
           </div>
-          <button
-            className="button button--ghost"
-            type="button"
-            onClick={handleMoveToTrash}
-            disabled={trashPending}
-          >
-            ゴミ箱へ移動
-          </button>
+          <div className="editor-actions">
+            <button
+              className="button button--ghost"
+              type="button"
+              onClick={handleToggleFavorite}
+              disabled={favoritePending}
+            >
+              {isFavorite ? "★ お気に入り解除" : "☆ お気に入り"}
+            </button>
+            <button
+              className="button button--ghost"
+              type="button"
+              onClick={handleMoveToTrash}
+              disabled={trashPending}
+            >
+              ゴミ箱へ移動
+            </button>
+          </div>
         </div>
+        {favoriteError && (
+          <p className="editor-favorite-error" role="status">
+            {favoriteError}
+          </p>
+        )}
       </div>
 
       {conflictState.active && (

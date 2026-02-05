@@ -18,6 +18,7 @@ export type PageListItem = {
   id: string;
   title: string | null;
   updatedAt: string | Date;
+  isFavorite: boolean | null;
 };
 
 const encodePageCursor = (cursor: PageCursor) => {
@@ -114,7 +115,11 @@ export const listPagesForWorkspace = async ({
 
   const rows = cursor
     ? await sql`
-        select id, title, updated_at as "updatedAt"
+        select
+          id,
+          title,
+          updated_at as "updatedAt",
+          is_favorite as "isFavorite"
         from pages
         where workspace_id = ${workspaceId}
           and is_deleted = false
@@ -123,7 +128,11 @@ export const listPagesForWorkspace = async ({
         limit ${limit}
       `
     : await sql`
-        select id, title, updated_at as "updatedAt"
+        select
+          id,
+          title,
+          updated_at as "updatedAt",
+          is_favorite as "isFavorite"
         from pages
         where workspace_id = ${workspaceId}
           and is_deleted = false
@@ -145,4 +154,29 @@ export const listPagesForWorkspace = async ({
       : null;
 
   return { items, nextCursor };
+};
+
+export const listFavoritePagesForWorkspace = async ({
+  workspaceId
+}: {
+  workspaceId: string;
+}): Promise<PageListItem[]> => {
+  if (!sql) {
+    throw new Error('Database not configured.');
+  }
+
+  const rows = await sql`
+    select
+      id,
+      title,
+      updated_at as "updatedAt",
+      is_favorite as "isFavorite"
+    from pages
+    where workspace_id = ${workspaceId}
+      and is_deleted = false
+      and is_favorite = true
+    order by updated_at desc, id desc
+  `;
+
+  return rows as PageListItem[];
 };
