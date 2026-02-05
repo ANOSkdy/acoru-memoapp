@@ -219,7 +219,6 @@ Mobile
 - workspaces: 将来のマルチワークスペース拡張点（MVPは1固定可）
 - pages: メモ本体（タイトル、階層、削除/お気に入り）
 - blocks: ページ内容（JSONB）
-- tags / page_tags: 整理
 - page_revisions: スナップショット履歴（軽量）
 
 ### 9.2 テーブル定義（論理）
@@ -247,23 +246,11 @@ blocks
 - order_index (int)
 - created_at, updated_at
 
-tags
-
-- id (uuid)
-- workspace_id (uuid)
-- name (text unique per workspace)
-- color (text|null)
-
-page_tags
-
-- page_id (uuid)
-- tag_id (uuid)
-
 page_revisions
 
 - id (uuid)
 - page_id (uuid)
-- snapshot (jsonb)（title + blocks + tag_ids 等）
+- snapshot (jsonb)（title + blocks 等）
 - created_at
 - created_by (uuid)
 
@@ -272,8 +259,6 @@ page_revisions
 - pages(workspace_id, updated_at desc)
 - pages(workspace_id, is_favorite, updated_at desc)
 - blocks(page_id, order_index)
-- tags(workspace_id, name)
-- page_tags(page_id), page_tags(tag_id)
 
 ### 9.4 検索（段階導入）
 
@@ -299,7 +284,7 @@ page_revisions
 
 Pages
 
-- GET /api/pages?scope=recent|all|favorites&tagId=&parentId=
+- GET /api/pages?scope=recent|all|favorites&parentId=
 - POST /api/pages
 - GET /api/pages/:id
 - PATCH /api/pages/:id
@@ -310,13 +295,6 @@ Blocks
 
 - GET /api/pages/:id/blocks
 - PUT /api/pages/:id/blocks（一括置換）
-
-Tags
-
-- GET /api/tags
-- POST /api/tags
-- PATCH /api/tags/:id
-- DELETE /api/tags/:id（未使用時のみ or 付け替えUI）
 
 Search
 
@@ -331,7 +309,6 @@ AI
 
 - POST /api/ai/title-suggest
 - POST /api/ai/summarize
-- POST /api/ai/tag-suggest
 
 ### 10.3 共通レスポンス（例）
 
@@ -400,7 +377,6 @@ JSON schema（例）
 
 - title-suggest: { suggestions: string[] }
 - summarize: { summary: string, bullets: string[] }
-- tag-suggest: { existingTagIds: string[], newTagNames: string[] }
 
 失敗時はフォールバック（プレーンテキスト）→サーバー側で整形
 
@@ -462,7 +438,7 @@ JSON schema（例）
 ## 16. テスト方針（MVP）
 
 - Unit: ブロック変換/抽出、検索クエリ生成、AIレスポンス整形
-- Integration: API（pages/tags/search）の認可・整合性
+- Integration: API（pages/search）の認可・整合性
 - E2E（最小）:
   - 新規メモ作成→保存→検索→表示
   - ゴミ箱→復元

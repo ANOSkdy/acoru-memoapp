@@ -45,18 +45,6 @@ create table if not exists notes (
   updated_at timestamptz not null default now()
 );
 
-create table if not exists tags (
-  id uuid primary key default gen_random_uuid(),
-  name text not null unique,
-  created_at timestamptz not null default now()
-);
-
-create table if not exists note_tags (
-  note_id uuid not null references notes(id) on delete cascade,
-  tag_id uuid not null references tags(id) on delete cascade,
-  primary key (note_id, tag_id)
-);
-
 create index if not exists notes_user_id_idx on notes (user_id);
 create index if not exists notes_favorite_idx on notes (is_favorite);
 create index if not exists notes_updated_at_idx on notes (updated_at desc);

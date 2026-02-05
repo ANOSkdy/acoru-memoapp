@@ -79,7 +79,6 @@ app/
     page.tsx                # Home (Recent)
     notes/page.tsx          # All notes
     favorites/page.tsx
-    tags/page.tsx
     trash/page.tsx
     settings/page.tsx
     p/[pageId]/page.tsx     # Editor
@@ -89,12 +88,9 @@ app/
     pages/[pageId]/blocks/route.ts
     pages/[pageId]/restore/route.ts
     pages/[pageId]/revisions/route.ts
-    tags/route.ts
-    tags/[tagId]/route.ts
     search/route.ts
     ai/title-suggest/route.ts
     ai/summarize/route.ts
-    ai/tag-suggest/route.ts
 
 src/
   lib/
@@ -111,7 +107,6 @@ src/
     validators/
       page.ts
       block.ts
-      tag.ts
       ai.ts
     domain/
       blocks/
@@ -119,8 +114,6 @@ src/
         normalize.ts
         extract-text.ts
       pages/
-        service.ts
-      tags/
         service.ts
       revisions/
         service.ts
@@ -417,37 +410,6 @@ create index if not exists blocks_page_order_idx on blocks(page_id, order_index)
 create index if not exists blocks_page_parent_idx on blocks(page_id, parent_block_id);
 ```
 
-#### tags
-
-```sql
-create table if not exists tags (
-  id uuid primary key default gen_random_uuid(),
-  workspace_id uuid not null references workspaces(id) on delete cascade,
-  name text not null,
-  color text,
-
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-
--- case-insensitive unique（運用上重要）
-create unique index if not exists tags_ws_name_ci_uq
-on tags(workspace_id, lower(name));
-```
-
-#### page_tags
-
-```sql
-create table if not exists page_tags (
-  page_id uuid not null references pages(id) on delete cascade,
-  tag_id uuid not null references tags(id) on delete cascade,
-  created_at timestamptz not null default now(),
-  primary key (page_id, tag_id)
-);
-
-create index if not exists page_tags_tag_idx on page_tags(tag_id);
-```
-
 #### page_revisions（スナップショット）
 
 ```sql
@@ -485,10 +447,6 @@ create trigger trg_blocks_updated_at
 before update on blocks
 for each row execute function set_updated_at();
 
-drop trigger if exists trg_tags_updated_at on tags;
-create trigger trg_tags_updated_at
-before update on tags
-for each row execute function set_updated_at();
 ```
 
 ---
@@ -628,7 +586,6 @@ Content-Type: `application/json`
 
 Query
 - scope: recent | all | favorites | trash
-- tagId?: uuid
 - parentId?: uuid
 - limit?: number（default 20, max 50）
 - cursor?: string（updatedAt|id など）
@@ -723,7 +680,7 @@ Body（部分更新）
 #### DELETE /api/pages/:pageId
 
 - 完全削除（確認ダイアログ必須）
-- 関連する blocks / page_tags / revisions も cascade で削除
+- 関連する blocks / revisions も cascade で削除
 
 ### 9.3 Blocks
 
@@ -798,32 +755,7 @@ Conflict Response（409）
   - blocks全削除 → 再insert（order_indexはサーバーで採番し直し推奨）
   - commit
 
-### 9.4 Tags
-
-#### GET /api/tags
-
-- workspace内のタグ一覧（件数付きは将来）
-
-#### POST /api/tags
-
-```json
-{ "name": "Work", "color": "#FFD166" }
-```
-
-#### PATCH /api/tags/:tagId
-
-```json
-{ "name": "Work Log", "color": null }
-```
-
-#### DELETE /api/tags/:tagId
-
-参照中の場合:
-- MVP方針A: 400で拒否（先に付け替え）
-- MVP方針B: page_tagsを削除してタグ削除（確認必須）
-- 推奨: 方針A（事故防止）
-
-### 9.5 Search
+### 9.4 Search
 
 #### GET /api/search?q=...&limit=...
 
@@ -844,7 +776,7 @@ Response
 }
 ```
 
-### 9.6 Revisions
+### 9.5 Revisions
 
 #### GET /api/pages/:pageId/revisions?limit=20
 
@@ -921,33 +853,6 @@ Response
 }
 ```
 
-#### POST /api/ai/tag-suggest
-
-Body
-
-```json
-{
-  "pageId": "uuid",
-  "language": "ja",
-  "contextText": "...",
-  "existingTags": [
-    { "id": "uuid", "name": "Work" }
-  ]
-}
-```
-
-Response
-
-```json
-{
-  "ok": true,
-  "data": {
-    "existingTagIds": ["uuid"],
-    "newTagNames": ["..."]
-  }
-}
-```
-
 ### 10.4 AIプロンプト（サーバー側テンプレ）
 
 実装では「絶対にJSONだけ」を狙う。
@@ -960,7 +865,7 @@ Response
 - User
   - contextText を貼り付け
 
-同様に summarize / tag-suggest も JSON schema固定で指示。
+同様に summarize も JSON schema固定で指示。
 
 ### 10.5 レート制限（AI）
 
