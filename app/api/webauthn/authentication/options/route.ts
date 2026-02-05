@@ -1,4 +1,5 @@
 import { generateAuthenticationOptions } from '@simplewebauthn/server';
+import type { AuthenticatorTransportFuture } from '@simplewebauthn/server';
 import { NextResponse } from 'next/server';
 import { requireUser } from '@/lib/auth';
 import { getSessionTokenFromCookies } from '@/lib/auth/session-token';
@@ -6,6 +7,27 @@ import { sql } from '@/lib/db';
 import { getRpConfig } from '@/lib/webauthn/config';
 
 export const runtime = 'nodejs';
+
+const allowedTransports = new Set<AuthenticatorTransportFuture>([
+  'usb',
+  'ble',
+  'nfc',
+  'internal',
+  'cable',
+  'hybrid',
+  'smart-card'
+]);
+
+const normalizeTransports = (value: unknown): AuthenticatorTransportFuture[] | undefined => {
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+  const filtered = value.filter(
+    (item): item is AuthenticatorTransportFuture =>
+      typeof item === 'string' && allowedTransports.has(item as AuthenticatorTransportFuture)
+  );
+  return filtered.length > 0 ? filtered : undefined;
+};
 
 export const POST = async (request: Request) => {
   const user = await requireUser();
@@ -36,7 +58,7 @@ export const POST = async (request: Request) => {
     allowCredentials: credentials.map((credential) => ({
       id: credential.credential_id as string,
       type: 'public-key',
-      transports: (credential.transports as string[] | null) ?? undefined
+      transports: normalizeTransports(credential.transports)
     }))
   });
 
