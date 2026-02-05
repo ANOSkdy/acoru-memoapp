@@ -12,7 +12,17 @@ const getAdminEmails = () =>
       .filter(Boolean)
   );
 
-const defaultPreferences = {
+type Preferences = {
+  ui: {
+    compactMode: boolean;
+    reduceMotion: boolean;
+  };
+  editor: {
+    defaultBlockType: 'paragraph' | 'todo';
+  };
+};
+
+const defaultPreferences: Preferences = {
   ui: {
     compactMode: false,
     reduceMotion: false
