@@ -1,8 +1,8 @@
 'use client';
 
-import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { extractPlainText, type FlatBlock } from '@/lib/blocks';
 import { DEFAULT_PAGE_TITLE } from '@/lib/page-title';
 
 const DEFAULT_FOLDER_TITLE = 'Untitled folder';
@@ -14,11 +14,6 @@ type PageNode = {
   parentId: string | null;
   position: number | null;
   updatedAt: string | Date;
-};
-
-type FolderOption = {
-  id: string | null;
-  title: string;
 };
 
 const formatUpdatedAt = (value: string | Date | null) => {
@@ -41,14 +36,19 @@ export default function NotesHierarchy() {
   const [expanded, setExpanded] = useState<Set<string>>(new Set([rootKey]));
   const [loadingList, setLoadingList] = useState(false);
   const [loadingTree, setLoadingTree] = useState<Record<string, boolean>>({});
-  const [movePendingId, setMovePendingId] = useState<string | null>(null);
-  const [reorderPendingId, setReorderPendingId] = useState<string | null>(null);
-  const [deletePendingId, setDeletePendingId] = useState<string | null>(null);
-  const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
-  const [editingTitle, setEditingTitle] = useState('');
-  const [renamePendingId, setRenamePendingId] = useState<string | null>(null);
   const [folders, setFolders] = useState<PageNode[]>([]);
   const [createPending, setCreatePending] = useState<string | null>(null);
+  const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
+  const [selectedPageTitle, setSelectedPageTitle] = useState('');
+  const [selectedPageRevision, setSelectedPageRevision] = useState<number | null>(
+    null
+  );
+  const [memoText, setMemoText] = useState('');
+  const [loadingMemo, setLoadingMemo] = useState(false);
+  const [savePending, setSavePending] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
 
   const folderLookup = useMemo(() => {
     const map = new Map<string, string>();
@@ -64,16 +64,10 @@ export default function NotesHierarchy() {
     ? folderLookup.get(selectedParentId) ?? DEFAULT_FOLDER_TITLE
     : 'トップ';
 
-  const folderOptions = useMemo<FolderOption[]>(() => {
-    const options: FolderOption[] = [{ id: null, title: 'トップ' }];
-    folders.forEach((folder) => {
-      options.push({
-        id: folder.id,
-        title: folder.title || DEFAULT_FOLDER_TITLE
-      });
-    });
-    return options;
-  }, [folders]);
+  const memoItems = useMemo(
+    () => listItems.filter((item) => item.kind === 'page'),
+    [listItems]
+  );
 
   const loadFolderOptions = useCallback(async () => {
     try {
@@ -157,6 +151,23 @@ export default function NotesHierarchy() {
     void loadList(selectedParentId);
   }, [loadList, selectedParentId]);
 
+  useEffect(() => {
+    if (memoItems.length === 0) {
+      setSelectedPageId(null);
+      setSelectedPageTitle('');
+      setSelectedPageRevision(null);
+      setMemoText('');
+      setSaveError(null);
+      setIsDirty(false);
+      return;
+    }
+
+    const hasSelected = memoItems.some((item) => item.id === selectedPageId);
+    if (!hasSelected) {
+      setSelectedPageId(memoItems[0].id);
+    }
+  }, [memoItems, selectedPageId]);
+
   const handleToggle = async (folderId: string | null) => {
     const key = folderId ?? rootKey;
     setExpanded((prev) => {
@@ -200,112 +211,107 @@ export default function NotesHierarchy() {
     }
   };
 
-  const handleMove = async (pageId: string, parentId: string | null) => {
-    if (movePendingId) {
-      return;
-    }
-    setMovePendingId(pageId);
+  const loadMemoDetail = useCallback(async (pageId: string) => {
+    setLoadingMemo(true);
+    setSaveError(null);
     try {
-      const response = await fetch(`/api/pages/${pageId}/move`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ parentId })
-      });
-      if (!response.ok) {
-        return;
+      const [pageResponse, blocksResponse] = await Promise.all([
+        fetch(`/api/pages/${pageId}`, { cache: 'no-store' }),
+        fetch(`/api/pages/${pageId}/blocks`, { cache: 'no-store' })
+      ]);
+
+      if (!pageResponse.ok || !blocksResponse.ok) {
+        throw new Error('メモの取得に失敗しました。');
       }
-      await loadList(selectedParentId);
-      await loadTree(selectedParentId);
-      await loadFolderOptions();
+
+      const pagePayload = (await pageResponse.json()) as {
+        ok: boolean;
+        page?: { title?: string; contentRevision?: number };
+      };
+      const blocksPayload = (await blocksResponse.json()) as {
+        ok: boolean;
+        blocks?: FlatBlock[];
+      };
+
+      setSelectedPageTitle(pagePayload.page?.title ?? DEFAULT_PAGE_TITLE);
+      setSelectedPageRevision(pagePayload.page?.contentRevision ?? null);
+      const plainText = Array.isArray(blocksPayload.blocks)
+        ? extractPlainText(blocksPayload.blocks)
+        : '';
+      setMemoText(plainText);
+      setIsDirty(false);
+    } catch (error) {
+      setSaveError(
+        error instanceof Error ? error.message : 'メモの取得に失敗しました。'
+      );
     } finally {
-      setMovePendingId(null);
+      setLoadingMemo(false);
     }
-  };
+  }, []);
 
-  const handleReorder = async (pageId: string, direction: 'up' | 'down') => {
-    if (reorderPendingId) {
+  useEffect(() => {
+    if (!selectedPageId) {
+      return;
+    }
+    void loadMemoDetail(selectedPageId);
+  }, [loadMemoDetail, selectedPageId]);
+
+  const handleSaveMemo = async () => {
+    if (!selectedPageId || savePending || selectedPageRevision === null) {
       return;
     }
 
-    const index = listItems.findIndex((item) => item.id === pageId);
-    if (index === -1) {
-      return;
-    }
+    setSavePending(true);
+    setSaveError(null);
 
-    const targetIndex = direction === 'up' ? index - 1 : index + 1;
-    if (targetIndex < 0 || targetIndex >= listItems.length) {
-      return;
-    }
-
-    const nextItems = [...listItems];
-    const [moved] = nextItems.splice(index, 1);
-    nextItems.splice(targetIndex, 0, moved);
-    setListItems(nextItems);
-    setReorderPendingId(pageId);
+    const blocks: FlatBlock[] = memoText
+      ? [
+          {
+            id: crypto.randomUUID(),
+            pageId: selectedPageId,
+            parentBlockId: null,
+            type: 'paragraph',
+            indent: 0,
+            orderIndex: 0,
+            content: { text: memoText }
+          }
+        ]
+      : [];
 
     try {
-      const response = await fetch('/api/pages/reorder', {
-        method: 'PATCH',
+      const response = await fetch(`/api/pages/${selectedPageId}/blocks`, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          parentId: selectedParentId,
-          orderedIds: nextItems.map((item) => item.id)
+          baseRevision: selectedPageRevision,
+          title: selectedPageTitle,
+          blocks
         })
       });
-      if (!response.ok) {
-        await loadList(selectedParentId);
-        return;
-      }
-    } finally {
-      setReorderPendingId(null);
-    }
-  };
 
-  const handleDelete = async (pageId: string) => {
-    if (deletePendingId) {
-      return;
-    }
-    setDeletePendingId(pageId);
-    try {
-      const response = await fetch(`/api/pages/${pageId}`, {
-        method: 'DELETE'
-      });
-      if (!response.ok) {
+      if (response.status === 409) {
+        setSaveError('他の更新があります。再読み込みしてください。');
         return;
       }
-      await loadList(selectedParentId);
-      await loadTree(selectedParentId);
-      await loadFolderOptions();
-    } finally {
-      setDeletePendingId(null);
-    }
-  };
 
-  const handleRename = async () => {
-    if (!editingFolderId || renamePendingId) {
-      return;
-    }
-    const nextTitle = editingTitle.trim();
-    if (!nextTitle) {
-      return;
-    }
-    setRenamePendingId(editingFolderId);
-    try {
-      const response = await fetch(`/api/pages/${editingFolderId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: nextTitle })
-      });
       if (!response.ok) {
-        return;
+        throw new Error('保存に失敗しました。');
       }
-      setEditingFolderId(null);
-      setEditingTitle('');
+
+      const payload = (await response.json()) as {
+        contentRevision?: number;
+      };
+      if (typeof payload.contentRevision === 'number') {
+        setSelectedPageRevision(payload.contentRevision);
+      }
+      setIsDirty(false);
       await loadList(selectedParentId);
-      await loadTree(selectedParentId);
-      await loadFolderOptions();
+    } catch (error) {
+      setSaveError(
+        error instanceof Error ? error.message : '保存に失敗しました。'
+      );
     } finally {
-      setRenamePendingId(null);
+      setSavePending(false);
     }
   };
 
@@ -391,172 +397,126 @@ export default function NotesHierarchy() {
           {renderTree(null, 1)}
         </div>
       </aside>
-      <section className="notes-list">
-        <div className="notes-list__header">
-          <div>
-            <div className="badge">Current folder</div>
-            <h2>{currentFolderLabel}</h2>
-            <p className="notes-list__subtitle">
-              フォルダ内のメモとサブフォルダを表示します。
-            </p>
+      <section className="notes-panel">
+        <div className="notes-list">
+          <div className="notes-list__header">
+            <div>
+              <h2>{currentFolderLabel}</h2>
+            </div>
+            <div className="notes-list__actions">
+              <button
+                className="button"
+                type="button"
+                onClick={() => handleCreate('page')}
+                disabled={createPending === 'page'}
+              >
+                新規メモ
+              </button>
+              <button
+                className="button button--ghost"
+                type="button"
+                onClick={() => handleCreate('folder')}
+                disabled={createPending === 'folder'}
+              >
+                新規フォルダ
+              </button>
+            </div>
           </div>
-          <div className="notes-list__actions">
-            <button
-              className="button"
-              type="button"
-              onClick={() => handleCreate('page')}
-              disabled={createPending === 'page'}
-            >
-              新規メモ
-            </button>
-            <button
-              className="button button--ghost"
-              type="button"
-              onClick={() => handleCreate('folder')}
-              disabled={createPending === 'folder'}
-            >
-              新規フォルダ
-            </button>
-          </div>
-        </div>
 
-        {loadingList ? (
-          <div className="notes-list__empty">Loading...</div>
-        ) : listItems.length === 0 ? (
-          <div className="card notes-list__empty">
-            <p>このフォルダにはメモがありません。</p>
-          </div>
-        ) : (
-          <div className="notes-list__items">
-            {listItems.map((item, index) => (
-              <div key={item.id} className="notes-list__item">
-                <div className="notes-list__item-main">
-                  {item.kind === 'folder' ? (
-                    <>
-                      <button
-                        className="notes-list__title notes-list__title-button"
-                        type="button"
-                        onClick={() => setSelectedParentId(item.id)}
-                      >
-                        📁 {item.title || DEFAULT_FOLDER_TITLE}
-                      </button>
-                      {editingFolderId === item.id && (
-                        <div className="notes-list__edit">
-                          <input
-                            className="notes-list__input"
-                            value={editingTitle}
-                            onChange={(event) => setEditingTitle(event.target.value)}
-                            placeholder="フォルダ名を入力"
-                          />
-                          <button
-                            className="button button--ghost"
-                            type="button"
-                            onClick={handleRename}
-                            disabled={renamePendingId === item.id}
-                          >
-                            保存
-                          </button>
-                          <button
-                            className="button button--ghost"
-                            type="button"
-                            onClick={() => {
-                              setEditingFolderId(null);
-                              setEditingTitle('');
-                            }}
-                            disabled={renamePendingId === item.id}
-                          >
-                            キャンセル
-                          </button>
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <Link className="notes-list__title" href={`/p/${item.id}`}>
+          {loadingList ? (
+            <div className="notes-list__empty">Loading...</div>
+          ) : memoItems.length === 0 ? (
+            <div className="card notes-list__empty">
+              <p>このフォルダにはメモがありません。</p>
+            </div>
+          ) : (
+            <div className="notes-list__items">
+              {memoItems.map((item) => (
+                <div
+                  key={item.id}
+                  className={`notes-list__item ${
+                    selectedPageId === item.id ? 'notes-list__item--active' : ''
+                  }`}
+                >
+                  <div className="notes-list__item-main">
+                    <button
+                      className="notes-list__title notes-list__title-button"
+                      type="button"
+                      onClick={() => setSelectedPageId(item.id)}
+                    >
                       📝 {item.title || DEFAULT_PAGE_TITLE}
-                    </Link>
-                  )}
-                  <div className="notes-list__meta">
-                    最終更新: {formatUpdatedAt(item.updatedAt)}
+                    </button>
+                    <div className="notes-list__meta">
+                      最終更新: {formatUpdatedAt(item.updatedAt)}
+                    </div>
                   </div>
                 </div>
-                <div className="notes-list__controls">
-                  <div className="notes-list__move">
-                    <label>
-                      <span>Move to</span>
-                      <select
-                        value={item.parentId ?? ''}
-                        onChange={(event) => {
-                          const value = event.target.value;
-                          const nextParentId = value === '' ? null : value;
-                          if (nextParentId === item.id) {
-                            return;
-                          }
-                          void handleMove(item.id, nextParentId);
-                        }}
-                        disabled={movePendingId === item.id}
-                      >
-                        {folderOptions
-                          .filter((option) => option.id !== item.id)
-                          .map((option) => (
-                            <option
-                              key={option.id ?? 'root'}
-                              value={option.id ?? ''}
-                            >
-                              {option.title}
-                            </option>
-                          ))}
-                      </select>
-                    </label>
-                  </div>
-                  <div className="notes-list__order">
-                    <button
-                      className="button button--ghost"
-                      type="button"
-                      onClick={() => handleReorder(item.id, 'up')}
-                      disabled={index === 0 || reorderPendingId === item.id}
-                    >
-                      ↑
-                    </button>
-                    <button
-                      className="button button--ghost"
-                      type="button"
-                      onClick={() => handleReorder(item.id, 'down')}
-                      disabled={
-                        index === listItems.length - 1 ||
-                        reorderPendingId === item.id
-                      }
-                    >
-                      ↓
-                    </button>
-                    {item.kind === 'folder' && (
-                      <>
-                        <button
-                          className="button button--ghost"
-                          type="button"
-                          onClick={() => {
-                            setEditingFolderId(item.id);
-                            setEditingTitle(item.title || DEFAULT_FOLDER_TITLE);
-                          }}
-                          disabled={renamePendingId === item.id}
-                        >
-                          名前を編集
-                        </button>
-                        <button
-                          className="button button--ghost"
-                          type="button"
-                          onClick={() => handleDelete(item.id)}
-                          disabled={deletePendingId === item.id}
-                        >
-                          削除
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
+          )}
+        </div>
+        <div
+          className={`notes-detail ${
+            isExpanded ? 'notes-detail--expanded' : ''
+          }`}
+        >
+          <div className="notes-detail__header">
+            <div>
+              <div className="badge">Selected memo</div>
+              <h3>{selectedPageTitle || 'メモを選択'}</h3>
+              <p className="notes-detail__subtitle">
+                下段のテキストエリアから直接編集できます。
+              </p>
+            </div>
+            <div className="notes-detail__actions">
+              <button
+                className="button button--ghost"
+                type="button"
+                onClick={() => setIsExpanded((prev) => !prev)}
+                disabled={!selectedPageId}
+              >
+                {isExpanded ? '縮小表示' : '拡大表示'}
+              </button>
+              <button
+                className="button"
+                type="button"
+                onClick={handleSaveMemo}
+                disabled={!selectedPageId || savePending || !isDirty}
+              >
+                {savePending ? '保存中...' : '保存'}
+              </button>
+            </div>
           </div>
-        )}
+
+          {loadingMemo ? (
+            <div className="notes-detail__empty">Loading...</div>
+          ) : selectedPageId ? (
+            <div className="notes-detail__body">
+              <textarea
+                className="notes-detail__textarea"
+                value={memoText}
+                onChange={(event) => {
+                  setMemoText(event.target.value);
+                  setIsDirty(true);
+                }}
+                placeholder="メモの内容を入力してください。"
+              />
+              <div className="notes-detail__meta">
+                {saveError ? (
+                  <span className="notes-detail__error">{saveError}</span>
+                ) : isDirty ? (
+                  '未保存の変更があります。'
+                ) : (
+                  '変更は保存済みです。'
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="notes-detail__empty">
+              メモを選択すると内容が表示されます。
+            </div>
+          )}
+        </div>
       </section>
     </div>
   );
