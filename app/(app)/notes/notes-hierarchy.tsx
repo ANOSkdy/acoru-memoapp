@@ -111,69 +111,6 @@ export default function NotesHierarchy() {
     return memoItems.slice(startIndex, startIndex + pageSize);
   }, [displayMemoItems, isSearching, memoItems, pageSize, safePage]);
 
-  const memoNodes = useMemo(() => {
-    const linkPattern =
-      /((?:https?:\/\/|www\.)[^\s]+|[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,})/gi;
-    const emailPattern = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
-
-    return memoText.split('\n').map((line, lineIndex) => {
-      const tokens = line.split(linkPattern);
-      return (
-        <div className="notes-detail__line" key={`memo-line-${lineIndex}`}>
-          {tokens.map((token, tokenIndex) => {
-            if (!token) {
-              return null;
-            }
-            if (emailPattern.test(token)) {
-              return (
-                <a
-                  key={`memo-link-${lineIndex}-${tokenIndex}`}
-                  className="notes-detail__link"
-                  href={`mailto:${token}`}
-                  onClick={(event) => {
-                    event.preventDefault();
-                    const confirmed = window.confirm(
-                      'メールアプリを開いて送信しますか？'
-                    );
-                    if (confirmed) {
-                      window.location.href = `mailto:${token}`;
-                    }
-                  }}
-                >
-                  {token}
-                </a>
-              );
-            }
-            if (/^(https?:\/\/|www\.)/i.test(token)) {
-              const href = token.startsWith('http')
-                ? token
-                : `https://${token}`;
-              return (
-                <a
-                  key={`memo-link-${lineIndex}-${tokenIndex}`}
-                  className="notes-detail__link"
-                  href={href}
-                  onClick={(event) => {
-                    event.preventDefault();
-                    const confirmed = window.confirm('リンクを開きますか？');
-                    if (confirmed) {
-                      window.open(href, '_blank', 'noopener,noreferrer');
-                    }
-                  }}
-                >
-                  {token}
-                </a>
-              );
-            }
-            return (
-              <span key={`memo-text-${lineIndex}-${tokenIndex}`}>{token}</span>
-            );
-          })}
-        </div>
-      );
-    });
-  }, [memoText]);
-
   const loadFolderOptions = useCallback(async () => {
     try {
       const response = await fetch('/api/pages?scope=folders', {
@@ -927,21 +864,16 @@ export default function NotesHierarchy() {
                 />
               </div>
               <div className="notes-detail__textarea-wrapper">
-                <div
+                <textarea
                   className="notes-detail__textarea"
-                  contentEditable
-                  suppressContentEditableWarning
-                  role="textbox"
-                  aria-multiline="true"
-                  aria-label="メモの内容"
-                  data-placeholder="メモの内容を入力してください。"
-                  onInput={(event) => {
-                    setMemoText(event.currentTarget.innerText);
+                  value={memoText}
+                  onChange={(event) => {
+                    setMemoText(event.target.value);
                     setIsDirty(true);
                   }}
-                >
-                  {memoNodes}
-                </div>
+                  placeholder="メモの内容を入力してください。"
+                  aria-label="メモの内容"
+                />
                 {selectedMemo ? (
                   <span className="notes-detail__updated-at">
                     最終更新: {formatUpdatedAt(selectedMemo.updatedAt)}
@@ -1001,21 +933,16 @@ export default function NotesHierarchy() {
                   />
                 </div>
                 <div className="notes-modal__textarea-wrapper">
-                  <div
+                  <textarea
                     className="notes-modal__textarea"
-                    contentEditable
-                    suppressContentEditableWarning
-                    role="textbox"
-                    aria-multiline="true"
-                    aria-label="メモの内容"
-                    data-placeholder="メモの内容を入力してください。"
-                    onInput={(event) => {
-                      setMemoText(event.currentTarget.innerText);
+                    value={memoText}
+                    onChange={(event) => {
+                      setMemoText(event.target.value);
                       setIsDirty(true);
                     }}
-                  >
-                    {memoNodes}
-                  </div>
+                    placeholder="メモの内容を入力してください。"
+                    aria-label="メモの内容"
+                  />
                   {selectedMemo ? (
                     <span className="notes-detail__updated-at">
                       最終更新: {formatUpdatedAt(selectedMemo.updatedAt)}
