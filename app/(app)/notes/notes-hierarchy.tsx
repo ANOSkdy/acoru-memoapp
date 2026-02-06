@@ -461,13 +461,6 @@ export default function NotesHierarchy() {
           }`}
         >
           <div className="notes-detail__header">
-            <div>
-              <div className="badge">Selected memo</div>
-              <h3>{selectedPageTitle || 'メモを選択'}</h3>
-              <p className="notes-detail__subtitle">
-                下段のテキストエリアから直接編集できます。
-              </p>
-            </div>
             <div className="notes-detail__actions">
               <button
                 className="button button--ghost"
@@ -492,8 +485,7 @@ export default function NotesHierarchy() {
             <div className="notes-detail__empty">Loading...</div>
           ) : selectedPageId ? (
             <div className="notes-detail__body">
-              <label className="notes-detail__field">
-                <span className="notes-detail__label">メモタイトル</span>
+              <div className="notes-detail__field">
                 <input
                   className="notes-detail__title-input"
                   value={selectedPageTitle}
@@ -502,8 +494,9 @@ export default function NotesHierarchy() {
                     setIsDirty(true);
                   }}
                   placeholder="メモのタイトルを入力してください。"
+                  aria-label="メモタイトル"
                 />
-              </label>
+              </div>
               <textarea
                 className="notes-detail__textarea"
                 value={memoText}
