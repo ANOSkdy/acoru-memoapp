@@ -609,12 +609,15 @@ export default function NotesHierarchy() {
               </button>
               {selectedFolder ? (
                 <button
-                  className="button button--danger"
+                  className="button button--plain"
                   type="button"
                   onClick={handleDeleteFolder}
                   disabled={deleteFolderPending}
+                  aria-label={
+                    deleteFolderPending ? 'フォルダ削除中' : 'フォルダを削除'
+                  }
                 >
-                  × フォルダ削除
+                  ×
                 </button>
               ) : null}
             </div>
@@ -702,7 +705,7 @@ export default function NotesHierarchy() {
           <div className="notes-detail__header">
             <div className="notes-detail__actions">
               <button
-                className="button button--ghost"
+                className="button button--plain"
                 type="button"
                 onClick={() => setIsExpanded((prev) => !prev)}
                 disabled={!selectedPageId}
@@ -710,23 +713,25 @@ export default function NotesHierarchy() {
                   isExpanded ? '縮小表示に切り替える' : '拡大表示に切り替える'
                 }
               >
-                {isExpanded ? '－' : '＋'}
+                {isExpanded ? '⤡' : '⤢'}
               </button>
               <button
-                className="button"
+                className="button button--plain"
                 type="button"
                 onClick={handleSaveMemo}
                 disabled={!selectedPageId || savePending || !isDirty}
+                aria-label={savePending ? '保存中' : '保存'}
               >
-                {savePending ? '■ 保存中...' : '■ 保存'}
+                ■
               </button>
               <button
-                className="button button--danger"
+                className="button button--plain"
                 type="button"
                 onClick={handleDeleteMemo}
                 disabled={!selectedPageId || deletePending}
+                aria-label={deletePending ? '削除中' : '削除'}
               >
-                {deletePending ? '× 削除中...' : '× 削除'}
+                ×
               </button>
             </div>
           </div>
