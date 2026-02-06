@@ -351,6 +351,14 @@ a {
   color: var(--color-text);
 }
 
+.notes-tree__input {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 2px 6px;
+  font-size: 14px;
+}
+
 .notes-tree__children {
   display: grid;
   gap: 4px;
