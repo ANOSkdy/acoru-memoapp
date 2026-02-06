@@ -55,6 +55,9 @@ export default function NotesHierarchy() {
   const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
   const [editingFolderTitle, setEditingFolderTitle] = useState('');
   const [renamePending, setRenamePending] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<PageNode[]>([]);
+  const [searchPending, setSearchPending] = useState(false);
 
   const pageSize = 5;
 
@@ -82,17 +85,31 @@ export default function NotesHierarchy() {
     [listItems]
   );
 
-  const selectedMemo = useMemo(
-    () => memoItems.find((item) => item.id === selectedPageId) ?? null,
-    [memoItems, selectedPageId]
+  const trimmedQuery = searchQuery.trim();
+  const isSearching = trimmedQuery.length >= 2;
+
+  const displayMemoItems = useMemo(
+    () => (isSearching ? searchResults : memoItems),
+    [isSearching, memoItems, searchResults]
   );
 
-  const totalPages = Math.max(1, Math.ceil(memoItems.length / pageSize));
-  const safePage = Math.min(currentPage, totalPages);
+  const selectedMemo = useMemo(
+    () => displayMemoItems.find((item) => item.id === selectedPageId) ?? null,
+    [displayMemoItems, selectedPageId]
+  );
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil((isSearching ? displayMemoItems.length : memoItems.length) / pageSize)
+  );
+  const safePage = isSearching ? 1 : Math.min(currentPage, totalPages);
   const pagedMemoItems = useMemo(() => {
+    if (isSearching) {
+      return displayMemoItems;
+    }
     const startIndex = (safePage - 1) * pageSize;
     return memoItems.slice(startIndex, startIndex + pageSize);
-  }, [memoItems, pageSize, safePage]);
+  }, [displayMemoItems, isSearching, memoItems, pageSize, safePage]);
 
   const loadFolderOptions = useCallback(async () => {
     try {
@@ -199,13 +216,19 @@ export default function NotesHierarchy() {
   }, [selectedParentId]);
 
   useEffect(() => {
+    if (isSearching) {
+      setCurrentPage(1);
+    }
+  }, [isSearching]);
+
+  useEffect(() => {
     if (currentPage !== safePage) {
       setCurrentPage(safePage);
     }
   }, [currentPage, safePage]);
 
   useEffect(() => {
-    if (memoItems.length === 0) {
+    if (displayMemoItems.length === 0) {
       setSelectedPageId(null);
       setSelectedPageTitle('');
       setSelectedPageRevision(null);
@@ -216,11 +239,66 @@ export default function NotesHierarchy() {
       return;
     }
 
-    const hasSelected = memoItems.some((item) => item.id === selectedPageId);
+    const hasSelected = displayMemoItems.some((item) => item.id === selectedPageId);
     if (!hasSelected) {
-      setSelectedPageId(memoItems[0].id);
+      setSelectedPageId(displayMemoItems[0].id);
     }
-  }, [memoItems, selectedPageId]);
+  }, [displayMemoItems, selectedPageId]);
+
+  useEffect(() => {
+    if (!isSearching) {
+      setSearchResults([]);
+      setSearchPending(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    const handle = window.setTimeout(async () => {
+      setSearchPending(true);
+      try {
+        const params = new URLSearchParams({ q: trimmedQuery, limit: '50' });
+        const response = await fetch(`/api/search?${params.toString()}`, {
+          cache: 'no-store',
+          signal: controller.signal
+        });
+        if (!response.ok) {
+          return;
+        }
+        const payload = (await response.json()) as {
+          ok: boolean;
+          data?: {
+            items: Array<{
+              id: string;
+              title: string | null;
+              updatedAt: string | Date;
+            }>;
+          };
+        };
+        if (payload.ok && payload.data) {
+          const items = payload.data.items.map((item) => ({
+            id: item.id,
+            title: item.title,
+            kind: 'page' as const,
+            parentId: null,
+            position: null,
+            updatedAt: item.updatedAt
+          }));
+          setSearchResults(items);
+        }
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') {
+          return;
+        }
+      } finally {
+        setSearchPending(false);
+      }
+    }, 300);
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(handle);
+    };
+  }, [isSearching, trimmedQuery]);
 
   const handleToggle = async (folderId: string | null) => {
     const key = folderId ?? rootKey;
@@ -590,6 +668,37 @@ export default function NotesHierarchy() {
           <div className="notes-list__header">
             <div>
               <h2>{currentFolderLabel}</h2>
+              <div className="notes-list__edit">
+                <input
+                  className="notes-list__input"
+                  type="search"
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  placeholder="メモを検索（2文字以上）"
+                  aria-label="メモ検索"
+                />
+                {searchQuery ? (
+                  <button
+                    className="button button--ghost"
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    aria-label="検索条件をクリア"
+                  >
+                    クリア
+                  </button>
+                ) : null}
+                {isSearching ? (
+                  <span className="notes-list__empty">
+                    {searchPending
+                      ? '検索中...'
+                      : `${displayMemoItems.length}件の結果`}
+                  </span>
+                ) : (
+                  <span className="notes-list__empty">
+                    フォルダ内のメモを表示中
+                  </span>
+                )}
+              </div>
             </div>
             <div className="notes-list__actions">
               <button
@@ -624,19 +733,21 @@ export default function NotesHierarchy() {
             </div>
           </div>
 
-          {memoItems.length === 0 && !loadingList ? (
+          {displayMemoItems.length === 0 && !loadingList && !searchPending ? (
             <div className="notes-list__empty-message">
-              このフォルダにはメモがありません。
+              {isSearching
+                ? '検索結果が見つかりませんでした。'
+                : 'このフォルダにはメモがありません。'}
             </div>
           ) : null}
-          {loadingList || memoItems.length > 0 ? (
+          {loadingList || searchPending || displayMemoItems.length > 0 ? (
             <>
               <div
                 className={`notes-list__items ${
-                  loadingList ? 'notes-list__items--loading' : ''
+                  loadingList || searchPending ? 'notes-list__items--loading' : ''
                 }`}
               >
-                {(loadingList ? [] : pagedMemoItems).map((item) => (
+                {(loadingList || searchPending ? [] : pagedMemoItems).map((item) => (
                   <div
                     key={item.id}
                     className={`notes-list__item ${
@@ -658,7 +769,8 @@ export default function NotesHierarchy() {
                   {
                     length: Math.max(
                       0,
-                      pageSize - (loadingList ? 0 : pagedMemoItems.length)
+                      pageSize -
+                        (loadingList || searchPending ? 0 : pagedMemoItems.length)
                     )
                   },
                   (_, index) => (
@@ -670,31 +782,33 @@ export default function NotesHierarchy() {
                   )
                 )}
               </div>
-              <div className="notes-list__pager" aria-label="メモ一覧ページャ">
-                <button
-                  className="button button--ghost"
-                  type="button"
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.max(1, prev - 1))
-                  }
-                  disabled={loadingList || safePage === 1}
-                >
-                  前へ
-                </button>
-                <span className="notes-list__pager-status">
-                  {loadingList ? '読み込み中' : `${safePage} / ${totalPages}`}
-                </span>
-                <button
-                  className="button button--ghost"
-                  type="button"
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-                  }
-                  disabled={loadingList || safePage === totalPages}
-                >
-                  次へ
-                </button>
-              </div>
+              {!isSearching ? (
+                <div className="notes-list__pager" aria-label="メモ一覧ページャ">
+                  <button
+                    className="button button--ghost"
+                    type="button"
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.max(1, prev - 1))
+                    }
+                    disabled={loadingList || safePage === 1}
+                  >
+                    前へ
+                  </button>
+                  <span className="notes-list__pager-status">
+                    {loadingList ? '読み込み中' : `${safePage} / ${totalPages}`}
+                  </span>
+                  <button
+                    className="button button--ghost"
+                    type="button"
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                    }
+                    disabled={loadingList || safePage === totalPages}
+                  >
+                    次へ
+                  </button>
+                </div>
+              ) : null}
             </>
           ) : null}
         </div>
