@@ -471,10 +471,10 @@ export default function NotesHierarchy() {
                       <button
                         className="notes-list__title notes-list__title-button"
                         type="button"
-                        onClick={() => setSelectedPageId(item.id)}
-                      >
-                        📝 {item.title || DEFAULT_PAGE_TITLE}
-                      </button>
+                      onClick={() => setSelectedPageId(item.id)}
+                    >
+                      {item.title || DEFAULT_PAGE_TITLE}
+                    </button>
                     </div>
                   </div>
                 ))}
