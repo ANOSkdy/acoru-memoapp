@@ -10,7 +10,6 @@ type PageEditorProps = {
   initialTitle: string;
   initialBlocks: FlatBlock[];
   initialRevision: number;
-  initialIsFavorite: boolean;
 };
 
 
@@ -22,7 +21,6 @@ export default function PageEditor({
   initialTitle,
   initialBlocks,
   initialRevision,
-  initialIsFavorite,
 }: PageEditorProps) {
   const [title, setTitle] = useState(initialTitle);
   const [blocks, setBlocks] = useState<FlatBlock[]>(initialBlocks);
@@ -35,9 +33,6 @@ export default function PageEditor({
     serverRevision?: number;
   }>({ active: false, dismissed: false });
   const [trashPending, setTrashPending] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(initialIsFavorite);
-  const [favoritePending, setFavoritePending] = useState(false);
-  const [favoriteError, setFavoriteError] = useState<string | null>(null);
 
   const router = useRouter();
   const isSavingRef = useRef(false);
@@ -114,7 +109,7 @@ export default function PageEditor({
       }
 
       const pageData = (await pageResponse.json()) as {
-        page?: { title: string; contentRevision: number; isFavorite?: boolean };
+        page?: { title: string; contentRevision: number };
       };
       const blocksData = (await blocksResponse.json()) as {
         blocks?: FlatBlock[];
@@ -125,9 +120,6 @@ export default function PageEditor({
         if (typeof pageData.page.contentRevision === "number") {
           setBaseRevision(pageData.page.contentRevision);
         }
-        if (typeof pageData.page.isFavorite === "boolean") {
-          setIsFavorite(pageData.page.isFavorite);
-        }
       }
 
       if (Array.isArray(blocksData.blocks)) {
@@ -136,7 +128,6 @@ export default function PageEditor({
 
       setConflictState({ active: false, dismissed: false });
       setSaveError(null);
-      setFavoriteError(null);
     } catch (error) {
       setSaveError(
         error instanceof Error ? error.message : "再読み込みに失敗しました。"
@@ -162,7 +153,7 @@ export default function PageEditor({
       if (!response.ok) {
         throw new Error("ゴミ箱への移動に失敗しました。");
       }
-      router.push("/notes");
+      router.push("/");
       router.refresh();
     } catch (error) {
       setSaveError(
@@ -174,34 +165,6 @@ export default function PageEditor({
       setTrashPending(false);
     }
   }, [pageId, router, trashPending]);
-
-  const handleToggleFavorite = useCallback(async () => {
-    if (favoritePending) {
-      return;
-    }
-    setFavoritePending(true);
-    setFavoriteError(null);
-    try {
-      const response = await fetch(`/api/pages/${pageId}/favorite`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isFavorite: !isFavorite }),
-      });
-      if (!response.ok) {
-        throw new Error("お気に入りの更新に失敗しました。");
-      }
-      setIsFavorite((prev) => !prev);
-      router.refresh();
-    } catch (error) {
-      setFavoriteError(
-        error instanceof Error
-          ? error.message
-          : "お気に入りの更新に失敗しました。"
-      );
-    } finally {
-      setFavoritePending(false);
-    }
-  }, [favoritePending, isFavorite, pageId, router]);
 
   const updateBlock = (index: number, nextBlock: FlatBlock) => {
     setBlocks((prev) =>
@@ -311,17 +274,6 @@ export default function PageEditor({
             <button
               className="button button--ghost"
               type="button"
-              onClick={handleToggleFavorite}
-              disabled={favoritePending}
-            >
-              <span aria-hidden="true">{isFavorite ? "★" : "☆"}</span>
-              <span className="sr-only">
-                {isFavorite ? "お気に入り解除" : "お気に入り"}
-              </span>
-            </button>
-            <button
-              className="button button--ghost"
-              type="button"
               onClick={handleMoveToTrash}
               disabled={trashPending}
             >
@@ -330,11 +282,6 @@ export default function PageEditor({
             </button>
           </div>
         </div>
-        {favoriteError && (
-          <p className="editor-favorite-error" role="status">
-            {favoriteError}
-          </p>
-        )}
       </div>
 
       {conflictState.active && (

@@ -10,8 +10,6 @@ type AppLayoutProps = {
 
 const navItems = [
   { href: '/', label: 'Home' },
-  { href: '/notes', label: 'Notes' },
-  { href: '/favorites', label: 'Favorites' },
   { href: '/trash', label: 'Trash' },
   { href: '/settings', label: 'Settings' }
 ];
