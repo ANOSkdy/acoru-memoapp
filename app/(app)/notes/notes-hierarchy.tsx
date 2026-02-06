@@ -47,7 +47,7 @@ export default function NotesHierarchy() {
   const [loadingMemo, setLoadingMemo] = useState(false);
   const [savePending, setSavePending] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [deletePending, setDeletePending] = useState(false);
   const [deleteFolderPending, setDeleteFolderPending] = useState(false);
@@ -212,6 +212,7 @@ export default function NotesHierarchy() {
       setMemoText('');
       setSaveError(null);
       setIsDirty(false);
+      setIsModalOpen(false);
       return;
     }
 
@@ -697,23 +698,19 @@ export default function NotesHierarchy() {
             </>
           ) : null}
         </div>
-        <div
-          className={`notes-detail ${
-            isExpanded ? 'notes-detail--expanded' : ''
-          }`}
-        >
+        <div className="notes-detail">
           <div className="notes-detail__header">
             <div className="notes-detail__actions">
               <button
                 className="button button--plain"
                 type="button"
-                onClick={() => setIsExpanded((prev) => !prev)}
+                onClick={() => setIsModalOpen((prev) => !prev)}
                 disabled={!selectedPageId}
                 aria-label={
-                  isExpanded ? '縮小表示に切り替える' : '拡大表示に切り替える'
+                  isModalOpen ? '拡大編集を閉じる' : '拡大編集を開く'
                 }
               >
-                {isExpanded ? '⤡' : '⤢'}
+                {isModalOpen ? '⤡' : '⤢'}
               </button>
               <button
                 className="button button--plain"
@@ -784,6 +781,62 @@ export default function NotesHierarchy() {
             </div>
           )}
         </div>
+        {isModalOpen && selectedPageId ? (
+          <div
+            className="notes-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="メモ拡大編集"
+            onClick={() => setIsModalOpen(false)}
+          >
+            <div
+              className="notes-modal__panel"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="notes-modal__header">
+                <span className="notes-modal__title">拡大編集</span>
+                <button
+                  className="button button--plain"
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  aria-label="拡大編集を閉じる"
+                >
+                  ×
+                </button>
+              </div>
+              <div className="notes-modal__body">
+                <div className="notes-detail__field">
+                  <input
+                    className="notes-detail__title-input"
+                    value={selectedPageTitle}
+                    onChange={(event) => {
+                      setSelectedPageTitle(event.target.value);
+                      setIsDirty(true);
+                    }}
+                    placeholder="メモのタイトルを入力してください。"
+                    aria-label="メモタイトル"
+                  />
+                </div>
+                <div className="notes-modal__textarea-wrapper">
+                  <textarea
+                    className="notes-modal__textarea"
+                    value={memoText}
+                    onChange={(event) => {
+                      setMemoText(event.target.value);
+                      setIsDirty(true);
+                    }}
+                    placeholder="メモの内容を入力してください。"
+                  />
+                  {selectedMemo ? (
+                    <span className="notes-detail__updated-at">
+                      最終更新: {formatUpdatedAt(selectedMemo.updatedAt)}
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </section>
     </div>
   );
