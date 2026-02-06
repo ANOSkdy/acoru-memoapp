@@ -614,7 +614,7 @@ export default function NotesHierarchy() {
                   onClick={handleDeleteFolder}
                   disabled={deleteFolderPending}
                 >
-                  🗑️ フォルダ削除
+                  × フォルダ削除
                 </button>
               ) : null}
             </div>
@@ -710,7 +710,7 @@ export default function NotesHierarchy() {
                   isExpanded ? '縮小表示に切り替える' : '拡大表示に切り替える'
                 }
               >
-                {isExpanded ? '⤡' : '⤢'}
+                {isExpanded ? '－' : '＋'}
               </button>
               <button
                 className="button"
@@ -718,7 +718,7 @@ export default function NotesHierarchy() {
                 onClick={handleSaveMemo}
                 disabled={!selectedPageId || savePending || !isDirty}
               >
-                {savePending ? '💾 保存中...' : '💾 保存'}
+                {savePending ? '■ 保存中...' : '■ 保存'}
               </button>
               <button
                 className="button button--danger"
@@ -726,7 +726,7 @@ export default function NotesHierarchy() {
                 onClick={handleDeleteMemo}
                 disabled={!selectedPageId || deletePending}
               >
-                {deletePending ? '🗑️ 削除中...' : '🗑️ 削除'}
+                {deletePending ? '× 削除中...' : '× 削除'}
               </button>
             </div>
           </div>
