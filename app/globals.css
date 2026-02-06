@@ -862,6 +862,15 @@ a {
   color: white;
 }
 
+.button--plain {
+  background: transparent;
+  border-color: var(--color-border);
+  color: var(--color-text);
+  padding: 8px 12px;
+  font-weight: 600;
+  min-height: 40px;
+}
+
 .editor-shell {
   display: flex;
   flex-direction: column;

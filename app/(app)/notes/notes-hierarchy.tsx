@@ -49,6 +49,8 @@ export default function NotesHierarchy() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
+  const [deletePending, setDeletePending] = useState(false);
+  const [deleteFolderPending, setDeleteFolderPending] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
   const [editingFolderTitle, setEditingFolderTitle] = useState('');
@@ -69,6 +71,11 @@ export default function NotesHierarchy() {
   const currentFolderLabel = selectedParentId
     ? folderLookup.get(selectedParentId) ?? DEFAULT_FOLDER_TITLE
     : 'トップ';
+
+  const selectedFolder = useMemo(
+    () => folders.find((folder) => folder.id === selectedParentId) ?? null,
+    [folders, selectedParentId]
+  );
 
   const memoItems = useMemo(
     () => listItems.filter((item) => item.kind === 'page'),
@@ -361,6 +368,83 @@ export default function NotesHierarchy() {
     }
   };
 
+  const handleDeleteMemo = async () => {
+    if (!selectedPageId || deletePending) {
+      return;
+    }
+    const shouldDelete = window.confirm('このメモを削除しますか？');
+    if (!shouldDelete) {
+      return;
+    }
+
+    setDeletePending(true);
+    setSaveError(null);
+    try {
+      const response = await fetch(`/api/pages/${selectedPageId}/trash`, {
+        method: 'POST'
+      });
+
+      if (!response.ok) {
+        throw new Error('削除に失敗しました。');
+      }
+
+      setSelectedPageId(null);
+      setSelectedPageTitle('');
+      setSelectedPageRevision(null);
+      setMemoText('');
+      setIsDirty(false);
+      await loadList(selectedParentId);
+    } catch (error) {
+      setSaveError(
+        error instanceof Error ? error.message : '削除に失敗しました。'
+      );
+    } finally {
+      setDeletePending(false);
+    }
+  };
+
+  const handleDeleteFolder = async () => {
+    if (!selectedFolder || deleteFolderPending) {
+      return;
+    }
+    const shouldDelete = window.confirm(
+      `「${selectedFolder.title || DEFAULT_FOLDER_TITLE}」を削除しますか？`
+    );
+    if (!shouldDelete) {
+      return;
+    }
+
+    setDeleteFolderPending(true);
+    try {
+      const response = await fetch(`/api/pages/${selectedFolder.id}/trash`, {
+        method: 'POST'
+      });
+
+      if (!response.ok) {
+        throw new Error('フォルダ削除に失敗しました。');
+      }
+
+      const nextParentId = selectedFolder.parentId ?? null;
+      setSelectedParentId(nextParentId);
+      setSelectedPageId(null);
+      setSelectedPageTitle('');
+      setSelectedPageRevision(null);
+      setMemoText('');
+      setIsDirty(false);
+      await loadTree(nextParentId);
+      await loadList(nextParentId);
+      await loadFolderOptions();
+    } catch (error) {
+      setSaveError(
+        error instanceof Error
+          ? error.message
+          : 'フォルダ削除に失敗しました。'
+      );
+    } finally {
+      setDeleteFolderPending(false);
+    }
+  };
+
   const handleStartRename = (folder: PageNode) => {
     setEditingFolderId(folder.id);
     setEditingFolderTitle(folder.title || DEFAULT_FOLDER_TITLE);
@@ -523,6 +607,19 @@ export default function NotesHierarchy() {
               >
                 新規フォルダ
               </button>
+              {selectedFolder ? (
+                <button
+                  className="button button--plain"
+                  type="button"
+                  onClick={handleDeleteFolder}
+                  disabled={deleteFolderPending}
+                  aria-label={
+                    deleteFolderPending ? 'フォルダ削除中' : 'フォルダを削除'
+                  }
+                >
+                  ×
+                </button>
+              ) : null}
             </div>
           </div>
 
@@ -549,10 +646,10 @@ export default function NotesHierarchy() {
                       <button
                         className="notes-list__title notes-list__title-button"
                         type="button"
-                      onClick={() => setSelectedPageId(item.id)}
-                    >
-                      {item.title || DEFAULT_PAGE_TITLE}
-                    </button>
+                        onClick={() => setSelectedPageId(item.id)}
+                      >
+                        {item.title || DEFAULT_PAGE_TITLE}
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -608,20 +705,33 @@ export default function NotesHierarchy() {
           <div className="notes-detail__header">
             <div className="notes-detail__actions">
               <button
-                className="button button--ghost"
+                className="button button--plain"
                 type="button"
                 onClick={() => setIsExpanded((prev) => !prev)}
                 disabled={!selectedPageId}
+                aria-label={
+                  isExpanded ? '縮小表示に切り替える' : '拡大表示に切り替える'
+                }
               >
-                {isExpanded ? '縮小表示' : '拡大表示'}
+                {isExpanded ? '⤡' : '⤢'}
               </button>
               <button
-                className="button"
+                className="button button--plain"
                 type="button"
                 onClick={handleSaveMemo}
                 disabled={!selectedPageId || savePending || !isDirty}
+                aria-label={savePending ? '保存中' : '保存'}
               >
-                {savePending ? '保存中...' : '保存'}
+                ■
+              </button>
+              <button
+                className="button button--plain"
+                type="button"
+                onClick={handleDeleteMemo}
+                disabled={!selectedPageId || deletePending}
+                aria-label={deletePending ? '削除中' : '削除'}
+              >
+                ×
               </button>
             </div>
           </div>
