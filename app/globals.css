@@ -393,6 +393,19 @@ a {
   gap: 12px;
 }
 
+.notes-list__pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+.notes-list__pager-status {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
 .notes-list__item {
   display: flex;
   flex-direction: column;

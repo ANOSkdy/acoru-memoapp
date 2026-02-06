@@ -49,6 +49,9 @@ export default function NotesHierarchy() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const pageSize = 5;
 
   const folderLookup = useMemo(() => {
     const map = new Map<string, string>();
@@ -68,6 +71,13 @@ export default function NotesHierarchy() {
     () => listItems.filter((item) => item.kind === 'page'),
     [listItems]
   );
+
+  const totalPages = Math.max(1, Math.ceil(memoItems.length / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const pagedMemoItems = useMemo(() => {
+    const startIndex = (safePage - 1) * pageSize;
+    return memoItems.slice(startIndex, startIndex + pageSize);
+  }, [memoItems, pageSize, safePage]);
 
   const loadFolderOptions = useCallback(async () => {
     try {
@@ -150,6 +160,16 @@ export default function NotesHierarchy() {
   useEffect(() => {
     void loadList(selectedParentId);
   }, [loadList, selectedParentId]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedParentId]);
+
+  useEffect(() => {
+    if (currentPage !== safePage) {
+      setCurrentPage(safePage);
+    }
+  }, [currentPage, safePage]);
 
   useEffect(() => {
     if (memoItems.length === 0) {
@@ -431,7 +451,7 @@ export default function NotesHierarchy() {
             </div>
           ) : (
             <div className="notes-list__items">
-              {memoItems.map((item) => (
+              {pagedMemoItems.map((item) => (
                 <div
                   key={item.id}
                   className={`notes-list__item ${
@@ -452,6 +472,31 @@ export default function NotesHierarchy() {
                   </div>
                 </div>
               ))}
+              <div className="notes-list__pager" aria-label="メモ一覧ページャ">
+                <button
+                  className="button button--ghost"
+                  type="button"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(1, prev - 1))
+                  }
+                  disabled={safePage === 1}
+                >
+                  前へ
+                </button>
+                <span className="notes-list__pager-status">
+                  {safePage} / {totalPages}
+                </span>
+                <button
+                  className="button button--ghost"
+                  type="button"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                  }
+                  disabled={safePage === totalPages}
+                >
+                  次へ
+                </button>
+              </div>
             </div>
           )}
         </div>
