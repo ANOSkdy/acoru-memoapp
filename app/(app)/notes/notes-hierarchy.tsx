@@ -49,6 +49,9 @@ export default function NotesHierarchy() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const pageSize = 5;
 
   const folderLookup = useMemo(() => {
     const map = new Map<string, string>();
@@ -68,6 +71,18 @@ export default function NotesHierarchy() {
     () => listItems.filter((item) => item.kind === 'page'),
     [listItems]
   );
+
+  const selectedMemo = useMemo(
+    () => memoItems.find((item) => item.id === selectedPageId) ?? null,
+    [memoItems, selectedPageId]
+  );
+
+  const totalPages = Math.max(1, Math.ceil(memoItems.length / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const pagedMemoItems = useMemo(() => {
+    const startIndex = (safePage - 1) * pageSize;
+    return memoItems.slice(startIndex, startIndex + pageSize);
+  }, [memoItems, pageSize, safePage]);
 
   const loadFolderOptions = useCallback(async () => {
     try {
@@ -150,6 +165,16 @@ export default function NotesHierarchy() {
   useEffect(() => {
     void loadList(selectedParentId);
   }, [loadList, selectedParentId]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedParentId]);
+
+  useEffect(() => {
+    if (currentPage !== safePage) {
+      setCurrentPage(safePage);
+    }
+  }, [currentPage, safePage]);
 
   useEffect(() => {
     if (memoItems.length === 0) {
@@ -423,37 +448,79 @@ export default function NotesHierarchy() {
             </div>
           </div>
 
-          {loadingList ? (
-            <div className="notes-list__empty">Loading...</div>
-          ) : memoItems.length === 0 ? (
-            <div className="card notes-list__empty">
-              <p>このフォルダにはメモがありません。</p>
+          {memoItems.length === 0 && !loadingList ? (
+            <div className="notes-list__empty-message">
+              このフォルダにはメモがありません。
             </div>
-          ) : (
-            <div className="notes-list__items">
-              {memoItems.map((item) => (
-                <div
-                  key={item.id}
-                  className={`notes-list__item ${
-                    selectedPageId === item.id ? 'notes-list__item--active' : ''
-                  }`}
-                >
-                  <div className="notes-list__item-main">
-                    <button
-                      className="notes-list__title notes-list__title-button"
-                      type="button"
+          ) : null}
+          {loadingList || memoItems.length > 0 ? (
+            <>
+              <div
+                className={`notes-list__items ${
+                  loadingList ? 'notes-list__items--loading' : ''
+                }`}
+              >
+                {(loadingList ? [] : pagedMemoItems).map((item) => (
+                  <div
+                    key={item.id}
+                    className={`notes-list__item ${
+                      selectedPageId === item.id ? 'notes-list__item--active' : ''
+                    }`}
+                  >
+                    <div className="notes-list__item-main">
+                      <button
+                        className="notes-list__title notes-list__title-button"
+                        type="button"
                       onClick={() => setSelectedPageId(item.id)}
                     >
-                      📝 {item.title || DEFAULT_PAGE_TITLE}
+                      {item.title || DEFAULT_PAGE_TITLE}
                     </button>
-                    <div className="notes-list__meta">
-                      最終更新: {formatUpdatedAt(item.updatedAt)}
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+                {Array.from(
+                  {
+                    length: Math.max(
+                      0,
+                      pageSize - (loadingList ? 0 : pagedMemoItems.length)
+                    )
+                  },
+                  (_, index) => (
+                    <div
+                      key={`placeholder-${index}`}
+                      className="notes-list__item notes-list__item--placeholder"
+                      aria-hidden="true"
+                    />
+                  )
+                )}
+              </div>
+              <div className="notes-list__pager" aria-label="メモ一覧ページャ">
+                <button
+                  className="button button--ghost"
+                  type="button"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(1, prev - 1))
+                  }
+                  disabled={loadingList || safePage === 1}
+                >
+                  前へ
+                </button>
+                <span className="notes-list__pager-status">
+                  {loadingList ? '読み込み中' : `${safePage} / ${totalPages}`}
+                </span>
+                <button
+                  className="button button--ghost"
+                  type="button"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                  }
+                  disabled={loadingList || safePage === totalPages}
+                >
+                  次へ
+                </button>
+              </div>
+            </>
+          ) : null}
         </div>
         <div
           className={`notes-detail ${
@@ -497,15 +564,22 @@ export default function NotesHierarchy() {
                   aria-label="メモタイトル"
                 />
               </div>
-              <textarea
-                className="notes-detail__textarea"
-                value={memoText}
-                onChange={(event) => {
-                  setMemoText(event.target.value);
-                  setIsDirty(true);
-                }}
-                placeholder="メモの内容を入力してください。"
-              />
+              <div className="notes-detail__textarea-wrapper">
+                <textarea
+                  className="notes-detail__textarea"
+                  value={memoText}
+                  onChange={(event) => {
+                    setMemoText(event.target.value);
+                    setIsDirty(true);
+                  }}
+                  placeholder="メモの内容を入力してください。"
+                />
+                {selectedMemo ? (
+                  <span className="notes-detail__updated-at">
+                    最終更新: {formatUpdatedAt(selectedMemo.updatedAt)}
+                  </span>
+                ) : null}
+              </div>
               <div className="notes-detail__meta">
                 {saveError ? (
                   <span className="notes-detail__error">{saveError}</span>
