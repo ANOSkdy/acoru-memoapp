@@ -50,6 +50,9 @@ export default function NotesHierarchy() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
+  const [editingFolderTitle, setEditingFolderTitle] = useState('');
+  const [renamePending, setRenamePending] = useState(false);
 
   const pageSize = 5;
 
@@ -154,6 +157,24 @@ export default function NotesHierarchy() {
     } finally {
       setLoadingList(false);
     }
+  }, []);
+
+  const updateFolderTitleLocally = useCallback((folderId: string, title: string) => {
+    setTreeMap((prev) => {
+      const next: Record<string, PageNode[]> = {};
+      Object.entries(prev).forEach(([key, items]) => {
+        next[key] = items.map((item) =>
+          item.id === folderId ? { ...item, title } : item
+        );
+      });
+      return next;
+    });
+    setFolders((prev) =>
+      prev.map((item) => (item.id === folderId ? { ...item, title } : item))
+    );
+    setListItems((prev) =>
+      prev.map((item) => (item.id === folderId ? { ...item, title } : item))
+    );
   }, []);
 
   useEffect(() => {
@@ -340,6 +361,41 @@ export default function NotesHierarchy() {
     }
   };
 
+  const handleStartRename = (folder: PageNode) => {
+    setEditingFolderId(folder.id);
+    setEditingFolderTitle(folder.title || DEFAULT_FOLDER_TITLE);
+  };
+
+  const handleRenameCommit = async () => {
+    if (!editingFolderId || renamePending) {
+      return;
+    }
+    const trimmedTitle = editingFolderTitle.trim();
+    if (!trimmedTitle) {
+      setEditingFolderId(null);
+      return;
+    }
+    setRenamePending(true);
+    try {
+      const response = await fetch(`/api/pages/${editingFolderId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: trimmedTitle })
+      });
+      if (!response.ok) {
+        return;
+      }
+      updateFolderTitleLocally(editingFolderId, trimmedTitle);
+    } finally {
+      setRenamePending(false);
+      setEditingFolderId(null);
+    }
+  };
+
+  const handleRenameCancel = () => {
+    setEditingFolderId(null);
+  };
+
   const renderTree = (parentId: string | null, depth: number) => {
     const key = parentId ?? rootKey;
     const children = treeMap[key] ?? [];
@@ -373,8 +429,30 @@ export default function NotesHierarchy() {
                 className="notes-tree__label"
                 type="button"
                 onClick={() => setSelectedParentId(folder.id)}
+                onDoubleClick={() => handleStartRename(folder)}
               >
-                📁 {folder.title || DEFAULT_FOLDER_TITLE}
+                {editingFolderId === folder.id ? (
+                  <input
+                    className="notes-tree__input"
+                    value={editingFolderTitle}
+                    onChange={(event) => setEditingFolderTitle(event.target.value)}
+                    onBlur={handleRenameCommit}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') {
+                        event.preventDefault();
+                        void handleRenameCommit();
+                      }
+                      if (event.key === 'Escape') {
+                        event.preventDefault();
+                        handleRenameCancel();
+                      }
+                    }}
+                    aria-label="フォルダ名を編集"
+                    autoFocus
+                  />
+                ) : (
+                  <>📁 {folder.title || DEFAULT_FOLDER_TITLE}</>
+                )}
               </button>
             </div>
             {loadingTree[folder.id] && (
