@@ -111,6 +111,55 @@ export default function NotesHierarchy() {
     return memoItems.slice(startIndex, startIndex + pageSize);
   }, [displayMemoItems, isSearching, memoItems, pageSize, safePage]);
 
+  const memoPreview = useMemo(() => {
+    const linkPattern =
+      /((?:https?:\/\/|www\.)[^\s]+|[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,})/gi;
+    const emailPattern = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
+
+    return memoText.split('\n').map((line, lineIndex) => {
+      const tokens = line.split(linkPattern);
+      return (
+        <p className="notes-detail__link-line" key={`memo-line-${lineIndex}`}>
+          {tokens.map((token, tokenIndex) => {
+            if (!token) {
+              return null;
+            }
+            if (emailPattern.test(token)) {
+              return (
+                <a
+                  key={`memo-link-${lineIndex}-${tokenIndex}`}
+                  className="notes-detail__link"
+                  href={`mailto:${token}`}
+                >
+                  {token}
+                </a>
+              );
+            }
+            if (/^(https?:\/\/|www\.)/i.test(token)) {
+              const href = token.startsWith('http')
+                ? token
+                : `https://${token}`;
+              return (
+                <a
+                  key={`memo-link-${lineIndex}-${tokenIndex}`}
+                  className="notes-detail__link"
+                  href={href}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {token}
+                </a>
+              );
+            }
+            return (
+              <span key={`memo-text-${lineIndex}-${tokenIndex}`}>{token}</span>
+            );
+          })}
+        </p>
+      );
+    });
+  }, [memoText]);
+
   const loadFolderOptions = useCallback(async () => {
     try {
       const response = await fetch('/api/pages?scope=folders', {
@@ -879,6 +928,12 @@ export default function NotesHierarchy() {
                   </span>
                 ) : null}
               </div>
+              <div className="notes-detail__link-preview" aria-live="polite">
+                <span className="notes-detail__link-label">
+                  URL・メールはクリックで開けます。
+                </span>
+                <div className="notes-detail__link-content">{memoPreview}</div>
+              </div>
               <div className="notes-detail__meta">
                 {saveError ? (
                   <span className="notes-detail__error">{saveError}</span>
@@ -946,6 +1001,12 @@ export default function NotesHierarchy() {
                       最終更新: {formatUpdatedAt(selectedMemo.updatedAt)}
                     </span>
                   ) : null}
+                </div>
+                <div className="notes-detail__link-preview" aria-live="polite">
+                  <span className="notes-detail__link-label">
+                    URL・メールはクリックで開けます。
+                  </span>
+                  <div className="notes-detail__link-content">{memoPreview}</div>
                 </div>
               </div>
             </div>
