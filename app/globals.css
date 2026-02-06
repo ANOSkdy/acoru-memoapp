@@ -416,6 +416,12 @@ a {
   background: var(--color-surface);
 }
 
+.notes-list__item--placeholder {
+  border-style: dashed;
+  background: transparent;
+  box-shadow: none;
+}
+
 .notes-list__item--active {
   border-color: rgba(99, 102, 241, 0.5);
   box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.25);

@@ -51,7 +51,7 @@ export default function NotesHierarchy() {
   const [isDirty, setIsDirty] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const pageSize = 10;
+  const pageSize = 5;
 
   const folderLookup = useMemo(() => {
     const map = new Map<string, string>();
@@ -474,6 +474,16 @@ export default function NotesHierarchy() {
                   </div>
                 </div>
               ))}
+              {Array.from(
+                { length: Math.max(0, pageSize - pagedMemoItems.length) },
+                (_, index) => (
+                  <div
+                    key={`placeholder-${index}`}
+                    className="notes-list__item notes-list__item--placeholder"
+                    aria-hidden="true"
+                  />
+                )
+              )}
               <div className="notes-list__pager" aria-label="メモ一覧ページャ">
                 <button
                   className="button button--ghost"
