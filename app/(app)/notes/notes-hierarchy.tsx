@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { type RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { extractPlainText, type FlatBlock } from '@/lib/blocks';
 import { DEFAULT_PAGE_TITLE } from '@/lib/page-title';
@@ -58,6 +58,9 @@ export default function NotesHierarchy() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<PageNode[]>([]);
   const [searchPending, setSearchPending] = useState(false);
+  const memoTextRef = useRef('');
+  const memoEditorRef = useRef<HTMLDivElement>(null);
+  const modalMemoEditorRef = useRef<HTMLDivElement>(null);
 
   const pageSize = 5;
 
@@ -110,69 +113,6 @@ export default function NotesHierarchy() {
     const startIndex = (safePage - 1) * pageSize;
     return memoItems.slice(startIndex, startIndex + pageSize);
   }, [displayMemoItems, isSearching, memoItems, pageSize, safePage]);
-
-  const memoNodes = useMemo(() => {
-    const linkPattern =
-      /((?:https?:\/\/|www\.)[^\s]+|[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,})/gi;
-    const emailPattern = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
-
-    return memoText.split('\n').map((line, lineIndex) => {
-      const tokens = line.split(linkPattern);
-      return (
-        <div className="notes-detail__line" key={`memo-line-${lineIndex}`}>
-          {tokens.map((token, tokenIndex) => {
-            if (!token) {
-              return null;
-            }
-            if (emailPattern.test(token)) {
-              return (
-                <a
-                  key={`memo-link-${lineIndex}-${tokenIndex}`}
-                  className="notes-detail__link"
-                  href={`mailto:${token}`}
-                  onClick={(event) => {
-                    event.preventDefault();
-                    const confirmed = window.confirm(
-                      'メールアプリを開いて送信しますか？'
-                    );
-                    if (confirmed) {
-                      window.location.href = `mailto:${token}`;
-                    }
-                  }}
-                >
-                  {token}
-                </a>
-              );
-            }
-            if (/^(https?:\/\/|www\.)/i.test(token)) {
-              const href = token.startsWith('http')
-                ? token
-                : `https://${token}`;
-              return (
-                <a
-                  key={`memo-link-${lineIndex}-${tokenIndex}`}
-                  className="notes-detail__link"
-                  href={href}
-                  onClick={(event) => {
-                    event.preventDefault();
-                    const confirmed = window.confirm('リンクを開きますか？');
-                    if (confirmed) {
-                      window.open(href, '_blank', 'noopener,noreferrer');
-                    }
-                  }}
-                >
-                  {token}
-                </a>
-              );
-            }
-            return (
-              <span key={`memo-text-${lineIndex}-${tokenIndex}`}>{token}</span>
-            );
-          })}
-        </div>
-      );
-    });
-  }, [memoText]);
 
   const loadFolderOptions = useCallback(async () => {
     try {
@@ -450,6 +390,29 @@ export default function NotesHierarchy() {
     }
     void loadMemoDetail(selectedPageId);
   }, [loadMemoDetail, selectedPageId]);
+
+  useEffect(() => {
+    memoTextRef.current = memoText;
+  }, [memoText]);
+
+  useEffect(() => {
+    if (loadingMemo || isDirty) {
+      return;
+    }
+    const nextText = memoTextRef.current ?? '';
+    if (memoEditorRef.current) {
+      memoEditorRef.current.textContent = nextText;
+    }
+    if (modalMemoEditorRef.current) {
+      modalMemoEditorRef.current.textContent = nextText;
+    }
+  }, [isDirty, loadingMemo, selectedPageId]);
+
+  const handleMemoInput = useCallback((ref: RefObject<HTMLDivElement>) => {
+    const value = ref.current?.textContent ?? '';
+    setMemoText(value);
+    setIsDirty(true);
+  }, []);
 
   const handleSaveMemo = async () => {
     if (!selectedPageId || savePending || selectedPageRevision === null) {
@@ -935,13 +898,9 @@ export default function NotesHierarchy() {
                   aria-multiline="true"
                   aria-label="メモの内容"
                   data-placeholder="メモの内容を入力してください。"
-                  onInput={(event) => {
-                    setMemoText(event.currentTarget.innerText);
-                    setIsDirty(true);
-                  }}
-                >
-                  {memoNodes}
-                </div>
+                  ref={memoEditorRef}
+                  onInput={() => handleMemoInput(memoEditorRef)}
+                />
                 {selectedMemo ? (
                   <span className="notes-detail__updated-at">
                     最終更新: {formatUpdatedAt(selectedMemo.updatedAt)}
@@ -1009,13 +968,9 @@ export default function NotesHierarchy() {
                     aria-multiline="true"
                     aria-label="メモの内容"
                     data-placeholder="メモの内容を入力してください。"
-                    onInput={(event) => {
-                      setMemoText(event.currentTarget.innerText);
-                      setIsDirty(true);
-                    }}
-                  >
-                    {memoNodes}
-                  </div>
+                    ref={modalMemoEditorRef}
+                    onInput={() => handleMemoInput(modalMemoEditorRef)}
+                  />
                   {selectedMemo ? (
                     <span className="notes-detail__updated-at">
                       最終更新: {formatUpdatedAt(selectedMemo.updatedAt)}
