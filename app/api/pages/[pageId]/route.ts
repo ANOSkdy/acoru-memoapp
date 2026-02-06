@@ -44,8 +44,7 @@ export async function GET(
       id,
       title,
       content_revision as "contentRevision",
-      updated_at as "updatedAt",
-      is_favorite as "isFavorite"
+      updated_at as "updatedAt"
   `;
 
   if (rows.length === 0) {
