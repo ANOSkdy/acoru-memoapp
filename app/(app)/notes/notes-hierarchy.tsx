@@ -461,9 +461,6 @@ export default function NotesHierarchy() {
           }`}
         >
           <div className="notes-detail__header">
-            <div>
-              <h3>{selectedPageTitle || 'メモを選択'}</h3>
-            </div>
             <div className="notes-detail__actions">
               <button
                 className="button button--ghost"
