@@ -390,7 +390,7 @@ a {
 
 .notes-list__items {
   display: grid;
-  gap: 12px;
+  gap: 8px;
 }
 
 .notes-list__pager {
@@ -409,10 +409,10 @@ a {
 .notes-list__item {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
-  padding: 12px 16px;
+  padding: 8px 12px;
   background: var(--color-surface);
 }
 
@@ -423,11 +423,12 @@ a {
 
 .notes-list__item-main {
   display: grid;
-  gap: 6px;
+  gap: 2px;
 }
 
 .notes-list__title {
   font-weight: 600;
+  font-size: 14px;
   color: var(--color-text);
   text-decoration: none;
 }
@@ -483,6 +484,23 @@ a {
 
 .notes-detail--expanded .notes-detail__textarea {
   min-height: 420px;
+}
+
+.notes-detail__textarea-wrapper {
+  position: relative;
+}
+
+.notes-detail__textarea {
+  padding-bottom: 28px;
+}
+
+.notes-detail__updated-at {
+  position: absolute;
+  right: 10px;
+  bottom: 8px;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  pointer-events: none;
 }
 
 .notes-detail__header {

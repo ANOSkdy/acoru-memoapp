@@ -51,7 +51,7 @@ export default function NotesHierarchy() {
   const [isDirty, setIsDirty] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const pageSize = 5;
+  const pageSize = 10;
 
   const folderLookup = useMemo(() => {
     const map = new Map<string, string>();
@@ -70,6 +70,11 @@ export default function NotesHierarchy() {
   const memoItems = useMemo(
     () => listItems.filter((item) => item.kind === 'page'),
     [listItems]
+  );
+
+  const selectedMemo = useMemo(
+    () => memoItems.find((item) => item.id === selectedPageId) ?? null,
+    [memoItems, selectedPageId]
   );
 
   const totalPages = Math.max(1, Math.ceil(memoItems.length / pageSize));
@@ -466,9 +471,6 @@ export default function NotesHierarchy() {
                     >
                       📝 {item.title || DEFAULT_PAGE_TITLE}
                     </button>
-                    <div className="notes-list__meta">
-                      最終更新: {formatUpdatedAt(item.updatedAt)}
-                    </div>
                   </div>
                 </div>
               ))}
@@ -542,15 +544,22 @@ export default function NotesHierarchy() {
                   aria-label="メモタイトル"
                 />
               </div>
-              <textarea
-                className="notes-detail__textarea"
-                value={memoText}
-                onChange={(event) => {
-                  setMemoText(event.target.value);
-                  setIsDirty(true);
-                }}
-                placeholder="メモの内容を入力してください。"
-              />
+              <div className="notes-detail__textarea-wrapper">
+                <textarea
+                  className="notes-detail__textarea"
+                  value={memoText}
+                  onChange={(event) => {
+                    setMemoText(event.target.value);
+                    setIsDirty(true);
+                  }}
+                  placeholder="メモの内容を入力してください。"
+                />
+                {selectedMemo ? (
+                  <span className="notes-detail__updated-at">
+                    最終更新: {formatUpdatedAt(selectedMemo.updatedAt)}
+                  </span>
+                ) : null}
+              </div>
               <div className="notes-detail__meta">
                 {saveError ? (
                   <span className="notes-detail__error">{saveError}</span>
