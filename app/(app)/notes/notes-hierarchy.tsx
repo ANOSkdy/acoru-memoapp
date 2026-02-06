@@ -448,42 +448,52 @@ export default function NotesHierarchy() {
             </div>
           </div>
 
-          {loadingList ? (
-            <div className="notes-list__empty">Loading...</div>
-          ) : memoItems.length === 0 ? (
-            <div className="card notes-list__empty">
-              <p>このフォルダにはメモがありません。</p>
+          {memoItems.length === 0 && !loadingList ? (
+            <div className="notes-list__empty-message">
+              このフォルダにはメモがありません。
             </div>
-          ) : (
-            <div className="notes-list__items">
-              {pagedMemoItems.map((item) => (
-                <div
-                  key={item.id}
-                  className={`notes-list__item ${
-                    selectedPageId === item.id ? 'notes-list__item--active' : ''
-                  }`}
-                >
-                  <div className="notes-list__item-main">
-                    <button
-                      className="notes-list__title notes-list__title-button"
-                      type="button"
-                      onClick={() => setSelectedPageId(item.id)}
-                    >
-                      📝 {item.title || DEFAULT_PAGE_TITLE}
-                    </button>
-                  </div>
-                </div>
-              ))}
-              {Array.from(
-                { length: Math.max(0, pageSize - pagedMemoItems.length) },
-                (_, index) => (
+          ) : null}
+          {loadingList || memoItems.length > 0 ? (
+            <>
+              <div
+                className={`notes-list__items ${
+                  loadingList ? 'notes-list__items--loading' : ''
+                }`}
+              >
+                {(loadingList ? [] : pagedMemoItems).map((item) => (
                   <div
-                    key={`placeholder-${index}`}
-                    className="notes-list__item notes-list__item--placeholder"
-                    aria-hidden="true"
-                  />
-                )
-              )}
+                    key={item.id}
+                    className={`notes-list__item ${
+                      selectedPageId === item.id ? 'notes-list__item--active' : ''
+                    }`}
+                  >
+                    <div className="notes-list__item-main">
+                      <button
+                        className="notes-list__title notes-list__title-button"
+                        type="button"
+                        onClick={() => setSelectedPageId(item.id)}
+                      >
+                        📝 {item.title || DEFAULT_PAGE_TITLE}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {Array.from(
+                  {
+                    length: Math.max(
+                      0,
+                      pageSize - (loadingList ? 0 : pagedMemoItems.length)
+                    )
+                  },
+                  (_, index) => (
+                    <div
+                      key={`placeholder-${index}`}
+                      className="notes-list__item notes-list__item--placeholder"
+                      aria-hidden="true"
+                    />
+                  )
+                )}
+              </div>
               <div className="notes-list__pager" aria-label="メモ一覧ページャ">
                 <button
                   className="button button--ghost"
@@ -491,12 +501,12 @@ export default function NotesHierarchy() {
                   onClick={() =>
                     setCurrentPage((prev) => Math.max(1, prev - 1))
                   }
-                  disabled={safePage === 1}
+                  disabled={loadingList || safePage === 1}
                 >
                   前へ
                 </button>
                 <span className="notes-list__pager-status">
-                  {safePage} / {totalPages}
+                  {loadingList ? '読み込み中' : `${safePage} / ${totalPages}`}
                 </span>
                 <button
                   className="button button--ghost"
@@ -504,13 +514,13 @@ export default function NotesHierarchy() {
                   onClick={() =>
                     setCurrentPage((prev) => Math.min(totalPages, prev + 1))
                   }
-                  disabled={safePage === totalPages}
+                  disabled={loadingList || safePage === totalPages}
                 >
                   次へ
                 </button>
               </div>
-            </div>
-          )}
+            </>
+          ) : null}
         </div>
         <div
           className={`notes-detail ${
