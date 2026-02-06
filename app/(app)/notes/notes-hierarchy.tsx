@@ -111,7 +111,7 @@ export default function NotesHierarchy() {
     return memoItems.slice(startIndex, startIndex + pageSize);
   }, [displayMemoItems, isSearching, memoItems, pageSize, safePage]);
 
-  const memoPreview = useMemo(() => {
+  const memoNodes = useMemo(() => {
     const linkPattern =
       /((?:https?:\/\/|www\.)[^\s]+|[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,})/gi;
     const emailPattern = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
@@ -119,7 +119,7 @@ export default function NotesHierarchy() {
     return memoText.split('\n').map((line, lineIndex) => {
       const tokens = line.split(linkPattern);
       return (
-        <p className="notes-detail__link-line" key={`memo-line-${lineIndex}`}>
+        <div className="notes-detail__line" key={`memo-line-${lineIndex}`}>
           {tokens.map((token, tokenIndex) => {
             if (!token) {
               return null;
@@ -130,6 +130,15 @@ export default function NotesHierarchy() {
                   key={`memo-link-${lineIndex}-${tokenIndex}`}
                   className="notes-detail__link"
                   href={`mailto:${token}`}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    const confirmed = window.confirm(
+                      'メールアプリを開いて送信しますか？'
+                    );
+                    if (confirmed) {
+                      window.location.href = `mailto:${token}`;
+                    }
+                  }}
                 >
                   {token}
                 </a>
@@ -144,8 +153,13 @@ export default function NotesHierarchy() {
                   key={`memo-link-${lineIndex}-${tokenIndex}`}
                   className="notes-detail__link"
                   href={href}
-                  target="_blank"
-                  rel="noreferrer"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    const confirmed = window.confirm('リンクを開きますか？');
+                    if (confirmed) {
+                      window.open(href, '_blank', 'noopener,noreferrer');
+                    }
+                  }}
                 >
                   {token}
                 </a>
@@ -155,7 +169,7 @@ export default function NotesHierarchy() {
               <span key={`memo-text-${lineIndex}-${tokenIndex}`}>{token}</span>
             );
           })}
-        </p>
+        </div>
       );
     });
   }, [memoText]);
@@ -913,26 +927,26 @@ export default function NotesHierarchy() {
                 />
               </div>
               <div className="notes-detail__textarea-wrapper">
-                <textarea
+                <div
                   className="notes-detail__textarea"
-                  value={memoText}
-                  onChange={(event) => {
-                    setMemoText(event.target.value);
+                  contentEditable
+                  suppressContentEditableWarning
+                  role="textbox"
+                  aria-multiline="true"
+                  aria-label="メモの内容"
+                  data-placeholder="メモの内容を入力してください。"
+                  onInput={(event) => {
+                    setMemoText(event.currentTarget.innerText);
                     setIsDirty(true);
                   }}
-                  placeholder="メモの内容を入力してください。"
-                />
+                >
+                  {memoNodes}
+                </div>
                 {selectedMemo ? (
                   <span className="notes-detail__updated-at">
                     最終更新: {formatUpdatedAt(selectedMemo.updatedAt)}
                   </span>
                 ) : null}
-              </div>
-              <div className="notes-detail__link-preview" aria-live="polite">
-                <span className="notes-detail__link-label">
-                  URL・メールはクリックで開けます。
-                </span>
-                <div className="notes-detail__link-content">{memoPreview}</div>
               </div>
               <div className="notes-detail__meta">
                 {saveError ? (
@@ -987,26 +1001,26 @@ export default function NotesHierarchy() {
                   />
                 </div>
                 <div className="notes-modal__textarea-wrapper">
-                  <textarea
+                  <div
                     className="notes-modal__textarea"
-                    value={memoText}
-                    onChange={(event) => {
-                      setMemoText(event.target.value);
+                    contentEditable
+                    suppressContentEditableWarning
+                    role="textbox"
+                    aria-multiline="true"
+                    aria-label="メモの内容"
+                    data-placeholder="メモの内容を入力してください。"
+                    onInput={(event) => {
+                      setMemoText(event.currentTarget.innerText);
                       setIsDirty(true);
                     }}
-                    placeholder="メモの内容を入力してください。"
-                  />
+                  >
+                    {memoNodes}
+                  </div>
                   {selectedMemo ? (
                     <span className="notes-detail__updated-at">
                       最終更新: {formatUpdatedAt(selectedMemo.updatedAt)}
                     </span>
                   ) : null}
-                </div>
-                <div className="notes-detail__link-preview" aria-live="polite">
-                  <span className="notes-detail__link-label">
-                    URL・メールはクリックで開けます。
-                  </span>
-                  <div className="notes-detail__link-content">{memoPreview}</div>
                 </div>
               </div>
             </div>
