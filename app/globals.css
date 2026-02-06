@@ -618,6 +618,8 @@ a {
   color: var(--color-text);
   font-size: 14px;
   line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-y: auto;
 }
 
 .notes-detail__updated-at {
@@ -683,6 +685,25 @@ a {
   line-height: 1.6;
   font-family: inherit;
   resize: vertical;
+  white-space: pre-wrap;
+  overflow-y: auto;
+}
+
+.notes-detail__link {
+  color: var(--color-primary);
+  text-decoration: underline;
+  word-break: break-word;
+}
+
+.notes-detail__line {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.notes-detail__textarea:empty::before,
+.notes-modal__textarea:empty::before {
+  content: attr(data-placeholder);
+  color: var(--color-text-muted);
 }
 
 .notes-detail__meta {
