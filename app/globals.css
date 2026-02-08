@@ -614,7 +614,7 @@ a {
   padding: 12px 12px 28px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--color-border);
-  background: var(--color-surface-muted);
+  background: var(--color-surface);
   color: var(--color-text);
   font-size: 14px;
   line-height: 1.6;
@@ -668,7 +668,7 @@ a {
   padding: 10px 12px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--color-border);
-  background: var(--color-surface-muted);
+  background: var(--color-surface);
   color: var(--color-text);
   font-size: 14px;
 }
@@ -679,7 +679,7 @@ a {
   padding: 14px 14px 12px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--color-border);
-  background: var(--color-surface-muted);
+  background: var(--color-surface);
   color: var(--color-text);
   font-size: 14px;
   line-height: 1.6;
@@ -1090,6 +1090,7 @@ a {
   padding: 10px 12px;
   font-size: 15px;
   line-height: 1.5;
+  background: var(--color-surface);
   resize: vertical;
   min-height: 240px;
   flex: 1;
