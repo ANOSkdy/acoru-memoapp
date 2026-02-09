@@ -241,7 +241,13 @@ export default function NotesHierarchy() {
 
     const hasSelected = displayMemoItems.some((item) => item.id === selectedPageId);
     if (!hasSelected) {
-      setSelectedPageId(displayMemoItems[0].id);
+      setSelectedPageId(null);
+      setSelectedPageTitle('');
+      setSelectedPageRevision(null);
+      setMemoText('');
+      setSaveError(null);
+      setIsDirty(false);
+      setIsModalOpen(false);
     }
   }, [displayMemoItems, selectedPageId]);
 
