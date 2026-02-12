@@ -16,6 +16,11 @@ type PageEditorProps = {
 const getBlockText = (block: FlatBlock) =>
   "text" in block.content ? block.content.text : "";
 
+const createBlockId = () =>
+  typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
 const IMAGE_MAX_BYTES = 2 * 1024 * 1024;
 const ACCEPTED_IMAGE_MIME_TYPES = [
   "image/png",
@@ -23,6 +28,21 @@ const ACCEPTED_IMAGE_MIME_TYPES = [
   "image/webp",
   "image/gif",
 ] as const;
+
+const getClipboardImage = (event: React.ClipboardEvent) => {
+  const items = event.clipboardData?.items;
+  if (!items) {
+    return null;
+  }
+
+  for (const item of Array.from(items)) {
+    if (item.kind === "file" && item.type.startsWith("image/")) {
+      return item.getAsFile();
+    }
+  }
+
+  return null;
+};
 
 export default function PageEditor({
   pageId,
@@ -282,11 +302,11 @@ export default function PageEditor({
     });
   };
 
-  const handleImageFileChange = (index: number, file: File | null) => {
-    if (!file) {
-      return;
-    }
-
+  const applyImageFileToBlock = (
+    targetIndex: number,
+    file: File,
+    sourceBlockIndex?: number
+  ) => {
     if (!ACCEPTED_IMAGE_MIME_TYPES.includes(file.type as (typeof ACCEPTED_IMAGE_MIME_TYPES)[number])) {
       setSaveError("PNG/JPEG/WebP/GIF 形式の画像のみ添付できます。");
       return;
@@ -305,7 +325,41 @@ export default function PageEditor({
         return;
       }
 
-      handleImageUrlChange(index, value);
+      const block = blocks[targetIndex];
+
+      if (block?.type === "image") {
+        handleImageUrlChange(targetIndex, value);
+        setSaveError(null);
+        return;
+      }
+
+      if (sourceBlockIndex === undefined) {
+        return;
+      }
+
+      setBlocks((prev) => {
+        const sourceBlock = prev[sourceBlockIndex];
+        if (!sourceBlock) {
+          return prev;
+        }
+
+        const nextBlocks = [...prev];
+        nextBlocks.splice(sourceBlockIndex + 1, 0, {
+          id: createBlockId(),
+          pageId,
+          parentBlockId: sourceBlock.parentBlockId,
+          type: "image",
+          indent: sourceBlock.indent,
+          orderIndex: sourceBlockIndex + 1,
+          content: {
+            url: value,
+            alt: "",
+          },
+        } as FlatBlock);
+
+        return nextBlocks;
+      });
+
       setSaveError(null);
     };
     reader.onerror = () => {
@@ -313,6 +367,48 @@ export default function PageEditor({
     };
 
     reader.readAsDataURL(file);
+  };
+
+  const handleImageFileChange = (index: number, file: File | null) => {
+    if (!file) {
+      return;
+    }
+
+    applyImageFileToBlock(index, file);
+  };
+
+  const handleEditorPaste = (event: React.ClipboardEvent<HTMLDivElement>) => {
+    const imageFile = getClipboardImage(event);
+    if (!imageFile) {
+      return;
+    }
+
+    const target = event.target;
+    const blockCard =
+      target instanceof HTMLElement
+        ? target.closest<HTMLElement>("[data-block-index]")
+        : null;
+
+    if (!blockCard) {
+      return;
+    }
+
+    const sourceBlockIndexText = blockCard.dataset.blockIndex;
+    const sourceBlockIndex = Number(sourceBlockIndexText);
+
+    if (!Number.isInteger(sourceBlockIndex) || sourceBlockIndex < 0) {
+      return;
+    }
+
+    event.preventDefault();
+    const sourceBlock = blocks[sourceBlockIndex];
+
+    if (sourceBlock?.type === "image") {
+      applyImageFileToBlock(sourceBlockIndex, imageFile);
+      return;
+    }
+
+    applyImageFileToBlock(sourceBlockIndex + 1, imageFile, sourceBlockIndex);
   };
 
   return (
@@ -412,9 +508,9 @@ export default function PageEditor({
         </div>
       )}
 
-      <div className="block-list">
+      <div className="block-list" onPasteCapture={handleEditorPaste}>
         {blocks.map((block, index) => (
-          <div className="block-card" key={block.id}>
+          <div className="block-card" key={block.id} data-block-index={index}>
             {block.type === "heading" && (
               <div className="block-row">
                 <label className="block-label">Level</label>
@@ -504,6 +600,9 @@ export default function PageEditor({
                   <label className="block-label" htmlFor={`image-file-${block.id}`}>
                     画像を添付（2MB まで）
                   </label>
+                  <span className="block-muted">
+                    画像ブロック内で Ctrl/Cmd + V でも貼り付けできます。
+                  </span>
                   <input
                     id={`image-file-${block.id}`}
                     className="block-file-input"
