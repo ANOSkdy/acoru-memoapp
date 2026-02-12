@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { type FlatBlock } from "@/lib/blocks";
@@ -15,6 +15,41 @@ type PageEditorProps = {
 
 const getBlockText = (block: FlatBlock) =>
   "text" in block.content ? block.content.text : "";
+
+const createBlockId = () =>
+  typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+const IMAGE_MAX_BYTES = 2 * 1024 * 1024;
+const ACCEPTED_IMAGE_MIME_TYPES = [
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/gif",
+] as const;
+
+const getClipboardImage = (clipboardData: DataTransfer | null) => {
+  if (!clipboardData) {
+    return null;
+  }
+
+  const items = clipboardData.items;
+  for (const item of Array.from(items)) {
+    if (item.kind === "file" && item.type.startsWith("image/")) {
+      return item.getAsFile();
+    }
+  }
+
+  const files = clipboardData.files;
+  for (const file of Array.from(files)) {
+    if (file.type.startsWith("image/")) {
+      return file;
+    }
+  }
+
+  return null;
+};
 
 export default function PageEditor({
   pageId,
@@ -35,7 +70,9 @@ export default function PageEditor({
   const [trashPending, setTrashPending] = useState(false);
 
   const router = useRouter();
+  const editorShellRef = useRef<HTMLDivElement | null>(null);
   const isSavingRef = useRef(false);
+  const [lastFocusedBlockIndex, setLastFocusedBlockIndex] = useState(0);
 
   const saveNow = useCallback(async () => {
     if (isSavingRef.current) {
@@ -250,8 +287,187 @@ export default function PageEditor({
     });
   };
 
+  const handleImageUrlChange = (index: number, url: string) => {
+    const block = blocks[index];
+    if (!block || block.type !== "image") {
+      return;
+    }
+
+    updateBlock(index, {
+      ...block,
+      content: { ...block.content, url },
+    });
+  };
+
+  const handleImageAltChange = (index: number, alt: string) => {
+    const block = blocks[index];
+    if (!block || block.type !== "image") {
+      return;
+    }
+
+    updateBlock(index, {
+      ...block,
+      content: { ...block.content, alt },
+    });
+  };
+
+  const applyImageFileToBlock = useCallback((
+    sourceBlockIndex: number,
+    file: File,
+    replaceOnly = false
+  ) => {
+    if (
+      !ACCEPTED_IMAGE_MIME_TYPES.includes(
+        file.type as (typeof ACCEPTED_IMAGE_MIME_TYPES)[number]
+      )
+    ) {
+      setSaveError("PNG/JPEG/WebP/GIF 形式の画像のみ添付できます。");
+      return;
+    }
+
+    if (file.size > IMAGE_MAX_BYTES) {
+      setSaveError("画像サイズは2MB以下にしてください。");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const value = reader.result;
+      if (typeof value !== "string") {
+        setSaveError("画像の読み込みに失敗しました。");
+        return;
+      }
+
+      setBlocks((prev) => {
+        const sourceBlock = prev[sourceBlockIndex];
+        if (!sourceBlock) {
+          return prev;
+        }
+
+        if (sourceBlock.type === "image") {
+          return prev.map((block, index) => {
+            if (index !== sourceBlockIndex || block.type !== "image") {
+              return block;
+            }
+            return {
+              ...block,
+              content: {
+                ...block.content,
+                url: value,
+              },
+            };
+          });
+        }
+
+        if (replaceOnly) {
+          return prev;
+        }
+
+        const nextBlocks = [...prev];
+        nextBlocks.splice(sourceBlockIndex + 1, 0, {
+          id: createBlockId(),
+          pageId,
+          parentBlockId: sourceBlock.parentBlockId,
+          type: "image",
+          indent: sourceBlock.indent,
+          orderIndex: sourceBlockIndex + 1,
+          content: {
+            url: value,
+            alt: "",
+          },
+        } as FlatBlock);
+
+        return nextBlocks;
+      });
+
+      setSaveError(null);
+    };
+
+    reader.onerror = () => {
+      setSaveError("画像の読み込みに失敗しました。");
+    };
+
+    reader.readAsDataURL(file);
+  }, [pageId]);
+
+  const getBlockIndexFromTarget = (target: EventTarget | null) => {
+    const blockCard =
+      target instanceof HTMLElement
+        ? target.closest<HTMLElement>("[data-block-index]")
+        : null;
+
+    if (!blockCard) {
+      return null;
+    }
+
+    const blockIndex = Number(blockCard.dataset.blockIndex);
+
+    if (!Number.isInteger(blockIndex) || blockIndex < 0) {
+      return null;
+    }
+
+    return blockIndex;
+  };
+
+  const handleImageFileChange = (index: number, file: File | null) => {
+    if (!file) {
+      return;
+    }
+
+    applyImageFileToBlock(index, file, true);
+  };
+
+  const handleEditorPaste = (event: React.ClipboardEvent<HTMLDivElement>) => {
+    const imageFile = getClipboardImage(event.clipboardData);
+    if (!imageFile) {
+      return;
+    }
+
+    const blockIndex =
+      getBlockIndexFromTarget(event.target) ?? Math.max(lastFocusedBlockIndex, 0);
+
+    event.preventDefault();
+    applyImageFileToBlock(blockIndex, imageFile);
+  };
+
+  const handleEditorFocusCapture = (
+    event: React.FocusEvent<HTMLDivElement>
+  ) => {
+    const blockIndex = getBlockIndexFromTarget(event.target);
+    if (blockIndex !== null) {
+      setLastFocusedBlockIndex(blockIndex);
+    }
+  };
+
+  useEffect(() => {
+    const onWindowPaste = (event: ClipboardEvent) => {
+      const editorRoot = editorShellRef.current;
+      if (!editorRoot) {
+        return;
+      }
+
+      const activeElement = document.activeElement;
+      if (!(activeElement instanceof Node) || !editorRoot.contains(activeElement)) {
+        return;
+      }
+
+      const imageFile = getClipboardImage(event.clipboardData);
+      if (!imageFile) {
+        return;
+      }
+
+      event.preventDefault();
+      applyImageFileToBlock(Math.max(lastFocusedBlockIndex, 0), imageFile);
+    };
+
+    window.addEventListener("paste", onWindowPaste);
+    return () => {
+      window.removeEventListener("paste", onWindowPaste);
+    };
+  }, [applyImageFileToBlock, lastFocusedBlockIndex]);
+
   return (
-    <div className="editor-shell">
+    <div className="editor-shell" ref={editorShellRef}>
       <div className="editor-header">
         <input
           className="editor-title-input"
@@ -347,9 +563,13 @@ export default function PageEditor({
         </div>
       )}
 
-      <div className="block-list">
+      <div
+        className="block-list"
+        onPasteCapture={handleEditorPaste}
+        onFocusCapture={handleEditorFocusCapture}
+      >
         {blocks.map((block, index) => (
-          <div className="block-card" key={block.id}>
+          <div className="block-card" key={block.id} data-block-index={index}>
             {block.type === "heading" && (
               <div className="block-row">
                 <label className="block-label">Level</label>
@@ -407,11 +627,57 @@ export default function PageEditor({
               <div className="block-divider" aria-hidden="true" />
             ) : block.type === "image" ? (
               <div className="block-image">
+                <div className="block-row block-row--stacked">
+                  <label className="block-label" htmlFor={`image-url-${block.id}`}>
+                    画像 URL / Data URL
+                  </label>
+                  <input
+                    id={`image-url-${block.id}`}
+                    className="block-input"
+                    value={block.content.url}
+                    onChange={(event) =>
+                      handleImageUrlChange(index, event.target.value)
+                    }
+                    placeholder="https://example.com/image.png"
+                  />
+                </div>
+                <div className="block-row block-row--stacked">
+                  <label className="block-label" htmlFor={`image-alt-${block.id}`}>
+                    代替テキスト
+                  </label>
+                  <input
+                    id={`image-alt-${block.id}`}
+                    className="block-input"
+                    value={block.content.alt ?? ""}
+                    onChange={(event) =>
+                      handleImageAltChange(index, event.target.value)
+                    }
+                    placeholder="画像の説明（任意）"
+                  />
+                </div>
+                <div className="block-row block-row--stacked">
+                  <label className="block-label" htmlFor={`image-file-${block.id}`}>
+                    画像を添付（2MB まで）
+                  </label>
+                  <span className="block-muted">
+                    画像ブロック内で Ctrl/Cmd + V でも貼り付けできます。
+                  </span>
+                  <input
+                    id={`image-file-${block.id}`}
+                    className="block-file-input"
+                    type="file"
+                    accept={ACCEPTED_IMAGE_MIME_TYPES.join(",")}
+                    onChange={(event) =>
+                      handleImageFileChange(index, event.target.files?.[0] ?? null)
+                    }
+                  />
+                </div>
+
                 {block.content.url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={block.content.url} alt={block.content.alt ?? ""} />
                 ) : (
-                  <span className="block-muted">Image URL is empty.</span>
+                  <span className="block-muted">画像URLまたは添付ファイルを指定してください。</span>
                 )}
               </div>
             ) : (
