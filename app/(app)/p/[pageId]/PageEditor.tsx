@@ -16,6 +16,14 @@ type PageEditorProps = {
 const getBlockText = (block: FlatBlock) =>
   "text" in block.content ? block.content.text : "";
 
+const IMAGE_MAX_BYTES = 2 * 1024 * 1024;
+const ACCEPTED_IMAGE_MIME_TYPES = [
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/gif",
+] as const;
+
 export default function PageEditor({
   pageId,
   initialTitle,
@@ -250,6 +258,63 @@ export default function PageEditor({
     });
   };
 
+  const handleImageUrlChange = (index: number, url: string) => {
+    const block = blocks[index];
+    if (!block || block.type !== "image") {
+      return;
+    }
+
+    updateBlock(index, {
+      ...block,
+      content: { ...block.content, url },
+    });
+  };
+
+  const handleImageAltChange = (index: number, alt: string) => {
+    const block = blocks[index];
+    if (!block || block.type !== "image") {
+      return;
+    }
+
+    updateBlock(index, {
+      ...block,
+      content: { ...block.content, alt },
+    });
+  };
+
+  const handleImageFileChange = (index: number, file: File | null) => {
+    if (!file) {
+      return;
+    }
+
+    if (!ACCEPTED_IMAGE_MIME_TYPES.includes(file.type as (typeof ACCEPTED_IMAGE_MIME_TYPES)[number])) {
+      setSaveError("PNG/JPEG/WebP/GIF 形式の画像のみ添付できます。");
+      return;
+    }
+
+    if (file.size > IMAGE_MAX_BYTES) {
+      setSaveError("画像サイズは2MB以下にしてください。");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const value = reader.result;
+      if (typeof value !== "string") {
+        setSaveError("画像の読み込みに失敗しました。");
+        return;
+      }
+
+      handleImageUrlChange(index, value);
+      setSaveError(null);
+    };
+    reader.onerror = () => {
+      setSaveError("画像の読み込みに失敗しました。");
+    };
+
+    reader.readAsDataURL(file);
+  };
+
   return (
     <div className="editor-shell">
       <div className="editor-header">
@@ -407,11 +472,54 @@ export default function PageEditor({
               <div className="block-divider" aria-hidden="true" />
             ) : block.type === "image" ? (
               <div className="block-image">
+                <div className="block-row block-row--stacked">
+                  <label className="block-label" htmlFor={`image-url-${block.id}`}>
+                    画像 URL / Data URL
+                  </label>
+                  <input
+                    id={`image-url-${block.id}`}
+                    className="block-input"
+                    value={block.content.url}
+                    onChange={(event) =>
+                      handleImageUrlChange(index, event.target.value)
+                    }
+                    placeholder="https://example.com/image.png"
+                  />
+                </div>
+                <div className="block-row block-row--stacked">
+                  <label className="block-label" htmlFor={`image-alt-${block.id}`}>
+                    代替テキスト
+                  </label>
+                  <input
+                    id={`image-alt-${block.id}`}
+                    className="block-input"
+                    value={block.content.alt ?? ""}
+                    onChange={(event) =>
+                      handleImageAltChange(index, event.target.value)
+                    }
+                    placeholder="画像の説明（任意）"
+                  />
+                </div>
+                <div className="block-row block-row--stacked">
+                  <label className="block-label" htmlFor={`image-file-${block.id}`}>
+                    画像を添付（2MB まで）
+                  </label>
+                  <input
+                    id={`image-file-${block.id}`}
+                    className="block-file-input"
+                    type="file"
+                    accept={ACCEPTED_IMAGE_MIME_TYPES.join(",")}
+                    onChange={(event) =>
+                      handleImageFileChange(index, event.target.files?.[0] ?? null)
+                    }
+                  />
+                </div>
+
                 {block.content.url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={block.content.url} alt={block.content.alt ?? ""} />
                 ) : (
-                  <span className="block-muted">Image URL is empty.</span>
+                  <span className="block-muted">画像URLまたは添付ファイルを指定してください。</span>
                 )}
               </div>
             ) : (
