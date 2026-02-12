@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { type FlatBlock } from "@/lib/blocks";
@@ -29,15 +29,22 @@ const ACCEPTED_IMAGE_MIME_TYPES = [
   "image/gif",
 ] as const;
 
-const getClipboardImage = (event: React.ClipboardEvent) => {
-  const items = event.clipboardData?.items;
-  if (!items) {
+const getClipboardImage = (clipboardData: DataTransfer | null) => {
+  if (!clipboardData) {
     return null;
   }
 
+  const items = clipboardData.items;
   for (const item of Array.from(items)) {
     if (item.kind === "file" && item.type.startsWith("image/")) {
       return item.getAsFile();
+    }
+  }
+
+  const files = clipboardData.files;
+  for (const file of Array.from(files)) {
+    if (file.type.startsWith("image/")) {
+      return file;
     }
   }
 
@@ -63,7 +70,9 @@ export default function PageEditor({
   const [trashPending, setTrashPending] = useState(false);
 
   const router = useRouter();
+  const editorShellRef = useRef<HTMLDivElement | null>(null);
   const isSavingRef = useRef(false);
+  const [lastFocusedBlockIndex, setLastFocusedBlockIndex] = useState(0);
 
   const saveNow = useCallback(async () => {
     if (isSavingRef.current) {
@@ -302,12 +311,16 @@ export default function PageEditor({
     });
   };
 
-  const applyImageFileToBlock = (
-    targetIndex: number,
+  const applyImageFileToBlock = useCallback((
+    sourceBlockIndex: number,
     file: File,
-    sourceBlockIndex?: number
+    replaceOnly = false
   ) => {
-    if (!ACCEPTED_IMAGE_MIME_TYPES.includes(file.type as (typeof ACCEPTED_IMAGE_MIME_TYPES)[number])) {
+    if (
+      !ACCEPTED_IMAGE_MIME_TYPES.includes(
+        file.type as (typeof ACCEPTED_IMAGE_MIME_TYPES)[number]
+      )
+    ) {
       setSaveError("PNG/JPEG/WebP/GIF 形式の画像のみ添付できます。");
       return;
     }
@@ -325,21 +338,28 @@ export default function PageEditor({
         return;
       }
 
-      const block = blocks[targetIndex];
-
-      if (block?.type === "image") {
-        handleImageUrlChange(targetIndex, value);
-        setSaveError(null);
-        return;
-      }
-
-      if (sourceBlockIndex === undefined) {
-        return;
-      }
-
       setBlocks((prev) => {
         const sourceBlock = prev[sourceBlockIndex];
         if (!sourceBlock) {
+          return prev;
+        }
+
+        if (sourceBlock.type === "image") {
+          return prev.map((block, index) => {
+            if (index !== sourceBlockIndex || block.type !== "image") {
+              return block;
+            }
+            return {
+              ...block,
+              content: {
+                ...block.content,
+                url: value,
+              },
+            };
+          });
+        }
+
+        if (replaceOnly) {
           return prev;
         }
 
@@ -362,11 +382,31 @@ export default function PageEditor({
 
       setSaveError(null);
     };
+
     reader.onerror = () => {
       setSaveError("画像の読み込みに失敗しました。");
     };
 
     reader.readAsDataURL(file);
+  }, [pageId]);
+
+  const getBlockIndexFromTarget = (target: EventTarget | null) => {
+    const blockCard =
+      target instanceof HTMLElement
+        ? target.closest<HTMLElement>("[data-block-index]")
+        : null;
+
+    if (!blockCard) {
+      return null;
+    }
+
+    const blockIndex = Number(blockCard.dataset.blockIndex);
+
+    if (!Number.isInteger(blockIndex) || blockIndex < 0) {
+      return null;
+    }
+
+    return blockIndex;
   };
 
   const handleImageFileChange = (index: number, file: File | null) => {
@@ -374,45 +414,60 @@ export default function PageEditor({
       return;
     }
 
-    applyImageFileToBlock(index, file);
+    applyImageFileToBlock(index, file, true);
   };
 
   const handleEditorPaste = (event: React.ClipboardEvent<HTMLDivElement>) => {
-    const imageFile = getClipboardImage(event);
+    const imageFile = getClipboardImage(event.clipboardData);
     if (!imageFile) {
       return;
     }
 
-    const target = event.target;
-    const blockCard =
-      target instanceof HTMLElement
-        ? target.closest<HTMLElement>("[data-block-index]")
-        : null;
-
-    if (!blockCard) {
-      return;
-    }
-
-    const sourceBlockIndexText = blockCard.dataset.blockIndex;
-    const sourceBlockIndex = Number(sourceBlockIndexText);
-
-    if (!Number.isInteger(sourceBlockIndex) || sourceBlockIndex < 0) {
-      return;
-    }
+    const blockIndex =
+      getBlockIndexFromTarget(event.target) ?? Math.max(lastFocusedBlockIndex, 0);
 
     event.preventDefault();
-    const sourceBlock = blocks[sourceBlockIndex];
-
-    if (sourceBlock?.type === "image") {
-      applyImageFileToBlock(sourceBlockIndex, imageFile);
-      return;
-    }
-
-    applyImageFileToBlock(sourceBlockIndex + 1, imageFile, sourceBlockIndex);
+    applyImageFileToBlock(blockIndex, imageFile);
   };
 
+  const handleEditorFocusCapture = (
+    event: React.FocusEvent<HTMLDivElement>
+  ) => {
+    const blockIndex = getBlockIndexFromTarget(event.target);
+    if (blockIndex !== null) {
+      setLastFocusedBlockIndex(blockIndex);
+    }
+  };
+
+  useEffect(() => {
+    const onWindowPaste = (event: ClipboardEvent) => {
+      const editorRoot = editorShellRef.current;
+      if (!editorRoot) {
+        return;
+      }
+
+      const activeElement = document.activeElement;
+      if (!(activeElement instanceof Node) || !editorRoot.contains(activeElement)) {
+        return;
+      }
+
+      const imageFile = getClipboardImage(event.clipboardData);
+      if (!imageFile) {
+        return;
+      }
+
+      event.preventDefault();
+      applyImageFileToBlock(Math.max(lastFocusedBlockIndex, 0), imageFile);
+    };
+
+    window.addEventListener("paste", onWindowPaste);
+    return () => {
+      window.removeEventListener("paste", onWindowPaste);
+    };
+  }, [applyImageFileToBlock, lastFocusedBlockIndex]);
+
   return (
-    <div className="editor-shell">
+    <div className="editor-shell" ref={editorShellRef}>
       <div className="editor-header">
         <input
           className="editor-title-input"
@@ -508,7 +563,11 @@ export default function PageEditor({
         </div>
       )}
 
-      <div className="block-list" onPasteCapture={handleEditorPaste}>
+      <div
+        className="block-list"
+        onPasteCapture={handleEditorPaste}
+        onFocusCapture={handleEditorFocusCapture}
+      >
         {blocks.map((block, index) => (
           <div className="block-card" key={block.id} data-block-index={index}>
             {block.type === "heading" && (
