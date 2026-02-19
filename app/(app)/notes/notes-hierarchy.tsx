@@ -81,7 +81,18 @@ export default function NotesHierarchy() {
   );
 
   const memoItems = useMemo(
-    () => listItems.filter((item) => item.kind === 'page'),
+    () =>
+      listItems
+        .filter((item) => item.kind === 'page')
+        .slice()
+        .sort((a, b) => {
+          const updatedAtDiff =
+            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+          if (updatedAtDiff !== 0) {
+            return updatedAtDiff;
+          }
+          return b.id.localeCompare(a.id);
+        }),
     [listItems]
   );
 
