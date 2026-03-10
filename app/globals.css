@@ -1058,6 +1058,12 @@ a {
   gap: 8px;
 }
 
+.block-row--stacked {
+  align-items: stretch;
+  flex-direction: column;
+  gap: 6px;
+}
+
 .block-label {
   font-size: 13px;
   font-weight: 600;
@@ -1103,9 +1109,14 @@ a {
 }
 
 .block-image img {
+  display: block;
   max-width: 100%;
   border-radius: var(--radius-sm);
   border: 1px solid var(--color-border);
+}
+
+.block-file-input {
+  font-size: 14px;
 }
 
 .block-muted {
