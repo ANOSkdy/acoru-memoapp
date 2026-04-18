@@ -1855,25 +1855,34 @@ body {
 }
 
 /* PR3 follow-up: mobile overflow and responsive optimization */
-html,
-body {
-  overflow-x: hidden;
-}
-
 .notes-shell,
 .notes-panel,
 .notes-panel__structure,
 .notes-tree,
 .notes-list,
 .notes-detail,
+.notes-list__items,
+.notes-list__item,
+.notes-list__item-main,
 .home-list,
 .home-list__item,
 .settings-card,
 .auth-card,
-.status-card {
+.status-card,
+.block-list,
+.block-card,
+.card {
   width: 100%;
   min-width: 0;
   max-width: 100%;
+}
+
+.notes-list__title,
+.notes-list__title-button,
+.notes-detail__updated-at {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 @media (max-width: 959px) {
