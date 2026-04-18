@@ -599,6 +599,8 @@ textarea {
 
 .notes-detail__textarea-wrapper {
   position: relative;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .notes-detail__textarea {
@@ -648,6 +650,8 @@ textarea {
   position: relative;
   min-height: 360px;
   display: grid;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .notes-modal__textarea {
@@ -662,8 +666,6 @@ textarea {
   color: var(--color-text);
   font-size: 14px;
   line-height: 1.6;
-  white-space: pre-wrap;
-  overflow-y: auto;
 }
 
 .notes-detail__updated-at {
@@ -729,8 +731,6 @@ textarea {
   line-height: 1.6;
   font-family: inherit;
   resize: vertical;
-  white-space: pre-wrap;
-  overflow-y: auto;
 }
 
 .notes-detail__meta {
@@ -1144,6 +1144,8 @@ textarea {
 
 .block-textarea {
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   border-radius: var(--radius-sm);
   border: 1px solid var(--color-border);
   padding: 10px 12px;
@@ -1153,6 +1155,16 @@ textarea {
   resize: vertical;
   min-height: 240px;
   flex: 1;
+}
+
+.notes-detail__textarea,
+.notes-modal__textarea,
+.block-textarea {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .block-divider {
@@ -1925,14 +1937,6 @@ body {
   }
 }
 
-/* PR3 follow-up: mobile editor clipping fix */
-.notes-detail__textarea,
-.notes-modal__textarea {
-  overflow-x: hidden;
-  overflow-wrap: anywhere;
-  word-break: break-word;
-}
-
 @media (max-width: 959px) {
   .notes-detail {
     padding: 12px;
@@ -2032,34 +2036,6 @@ body {
   }
 }
 
-
-/* PR3 follow-up: make editor input area never clip (all breakpoints) */
-.notes-detail__textarea-wrapper,
-.notes-modal__textarea-wrapper {
-  display: grid;
-  gap: 6px;
-}
-
-.notes-detail__textarea,
-.notes-modal__textarea {
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  overflow-x: auto;
-  overflow-y: auto;
-  white-space: pre-wrap;
-  word-break: break-word;
-  overflow-wrap: anywhere;
-  padding-bottom: 14px;
-}
-
-.notes-detail__updated-at {
-  position: static;
-  display: block;
-  margin-top: 0;
-  text-align: right;
-  font-size: 12px;
-}
 
 @media (max-width: 1200px) {
   .notes-detail__actions {
