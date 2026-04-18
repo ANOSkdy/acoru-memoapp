@@ -1962,3 +1962,72 @@ body {
     flex-basis: 100%;
   }
 }
+
+/* PR3 follow-up: mobile interaction safety (prevent clipping/overlay) */
+@media (max-width: 959px) {
+  .notes-list,
+  .notes-detail,
+  .notes-tree {
+    overflow: visible;
+    contain: none;
+  }
+
+  .notes-list__items {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .notes-detail {
+    display: block;
+  }
+
+  .notes-detail__header {
+    position: static;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+  }
+
+  .notes-detail__actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    align-items: stretch;
+  }
+
+  .notes-detail__actions .button {
+    width: 100%;
+    min-height: 44px;
+    white-space: normal;
+    line-height: 1.25;
+  }
+
+  .notes-detail__actions .button:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .notes-detail__body {
+    display: grid;
+    gap: 10px;
+  }
+
+  .notes-detail__textarea-wrapper,
+  .notes-modal__textarea-wrapper {
+    position: static;
+  }
+
+  .notes-detail__textarea,
+  .notes-modal__textarea {
+    min-height: 320px;
+    height: auto;
+    max-height: none;
+    padding-bottom: 14px;
+  }
+
+  .notes-detail__updated-at {
+    position: static;
+    display: block;
+    margin-top: 6px;
+    text-align: right;
+    pointer-events: none;
+  }
+}
