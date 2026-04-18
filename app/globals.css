@@ -2031,3 +2031,44 @@ body {
     pointer-events: none;
   }
 }
+
+
+/* PR3 follow-up: make editor input area never clip (all breakpoints) */
+.notes-detail__textarea-wrapper,
+.notes-modal__textarea-wrapper {
+  display: grid;
+  gap: 6px;
+}
+
+.notes-detail__textarea,
+.notes-modal__textarea {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  padding-bottom: 14px;
+}
+
+.notes-detail__updated-at {
+  position: static;
+  display: block;
+  margin-top: 0;
+  text-align: right;
+  font-size: 12px;
+}
+
+@media (max-width: 1200px) {
+  .notes-detail__actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .notes-detail__actions .button:last-child {
+    grid-column: 1 / -1;
+  }
+}
