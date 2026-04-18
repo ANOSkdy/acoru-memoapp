@@ -251,7 +251,7 @@ export default function PageEditor({
   };
 
   return (
-    <div className="editor-shell">
+    <div className="editor-shell page-editor">
       <div className="editor-header">
         <input
           className="editor-title-input"
@@ -347,9 +347,9 @@ export default function PageEditor({
         </div>
       )}
 
-      <div className="block-list">
+      <div className="block-list page-editor__block-list">
         {blocks.map((block, index) => (
-          <div className="block-card" key={block.id}>
+          <div className="block-card page-editor__block-card" key={block.id}>
             {block.type === "heading" && (
               <div className="block-row">
                 <label className="block-label">Level</label>
@@ -416,7 +416,7 @@ export default function PageEditor({
               </div>
             ) : (
               <textarea
-                className="block-textarea"
+                className="block-textarea page-editor__block-textarea"
                 value={getBlockText(block)}
                 onChange={(event) => handleTextChange(index, event.target.value)}
                 placeholder="テキストを入力"
