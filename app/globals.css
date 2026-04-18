@@ -1224,57 +1224,6 @@ textarea {
   background: radial-gradient(circle at 0% 0%, #eef8f8 0%, var(--color-bg) 48%);
 }
 
-.app-sidebar {
-  width: 248px;
-  background: color-mix(in srgb, var(--color-surface) 94%, #f4fbfa);
-  border-right: 1px solid var(--color-border);
-  padding: var(--space-6) var(--space-4);
-  display: none;
-  flex-direction: column;
-  gap: var(--space-6);
-}
-
-.app-sidebar__brand {
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
-
-.app-sidebar__nav {
-  display: grid;
-  gap: var(--space-2);
-}
-
-.app-sidebar__link {
-  min-height: 44px;
-  padding: 10px 12px;
-  border-radius: var(--radius-sm);
-  font-weight: 500;
-  color: var(--color-text-muted);
-  border: 1px solid transparent;
-}
-
-.app-sidebar__link:hover,
-.app-sidebar__link:focus-visible {
-  background: var(--color-primary-soft);
-  color: var(--color-primary-ink);
-  border-color: color-mix(in srgb, var(--color-primary) 35%, transparent);
-}
-
-.app-sidebar__footer {
-  margin-top: auto;
-  display: grid;
-  gap: var(--space-3);
-}
-
-.app-sidebar__meta {
-  color: var(--color-text-muted);
-  font-size: 12px;
-  overflow-wrap: anywhere;
-}
-
-.app-sidebar__signout { width: 100%; }
-
 .app-header__eyebrow {
   font-size: 12px;
   color: var(--color-text-muted);
@@ -1441,7 +1390,7 @@ textarea {
   border-radius: var(--radius-lg);
 }
 
+
 @media (min-width: 960px) {
-  .app-sidebar { display: flex; }
   .app-header { padding-inline: var(--space-6); }
 }

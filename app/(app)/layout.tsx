@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import MobileDrawer from './MobileDrawer';
 import { requireUser } from '@/lib/auth';
 import { signOut } from '@/lib/auth/actions';
 
@@ -19,29 +18,9 @@ export default async function AppLayout({ children }: AppLayoutProps) {
 
   return (
     <div className="app-shell">
-      <aside className="app-sidebar" aria-label="アプリナビゲーション">
-        <div className="app-sidebar__brand">Acoru Memo</div>
-        <nav className="app-sidebar__nav">
-          {navItems.map((item) => (
-            <Link key={item.href} className="app-sidebar__link" href={item.href}>
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-        <div className="app-sidebar__footer">
-          <div className="app-sidebar__meta">{user.email}</div>
-          <form action={signOut}>
-            <button className="button button--ghost app-sidebar__signout" type="submit">
-              サインアウト
-            </button>
-          </form>
-        </div>
-      </aside>
-
       <div className="app-content">
         <header className="app-header">
           <div className="app-header__row">
-            <MobileDrawer items={navItems} />
             <div>
               <div className="app-header__eyebrow">Workspace</div>
               <div className="app-header__title">{user.name} さんのノート</div>
