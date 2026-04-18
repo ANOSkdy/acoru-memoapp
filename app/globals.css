@@ -995,12 +995,14 @@ textarea {
   gap: 20px;
   flex: 1;
   min-height: 0;
+  min-width: 0;
 }
 
 .editor-header {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  min-width: 0;
 }
 
 .editor-status-row {
@@ -1090,7 +1092,11 @@ textarea {
   min-height: 60dvh;
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding-bottom: 12px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .block-card {
@@ -1103,6 +1109,10 @@ textarea {
   background: var(--color-surface);
   box-shadow: var(--shadow-sm);
   min-height: 320px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .block-row {
@@ -1144,6 +1154,8 @@ textarea {
 
 .block-textarea {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   border-radius: var(--radius-sm);
   border: 1px solid var(--color-border);
   padding: 10px 12px;
@@ -1153,6 +1165,12 @@ textarea {
   resize: vertical;
   min-height: 240px;
   flex: 1;
+  display: block;
+  overflow-x: hidden;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .block-divider {
