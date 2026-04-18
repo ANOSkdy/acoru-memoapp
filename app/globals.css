@@ -1218,3 +1218,179 @@ textarea {
     min-height: 0;
   }
 }
+
+/* PR2 visual refresh */
+.app-shell {
+  background: radial-gradient(circle at 0% 0%, #eef8f8 0%, var(--color-bg) 48%);
+}
+
+.app-header__eyebrow {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.app-header__title {
+  font-size: 22px;
+  letter-spacing: -0.01em;
+}
+
+.auth-layout,
+.status-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: var(--space-8) var(--space-4);
+  background: radial-gradient(circle at top, #eaf4f7 0%, #f3f6f9 55%);
+}
+
+.auth-card,
+.status-card {
+  width: min(520px, 100%);
+}
+
+.auth-stack { gap: var(--space-5); }
+.auth-brand,
+.status-code {
+  font-size: 12px;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  letter-spacing: 0.09em;
+}
+
+.auth-title,
+.status-title {
+  margin: 0 0 var(--space-2);
+  font-size: 30px;
+  line-height: 1.2;
+}
+
+.auth-description,
+.status-description,
+.auth-help,
+.status-dev-message {
+  margin: 0;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}
+
+.status-actions {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.home-list__item {
+  border-radius: var(--radius-lg);
+  padding: 20px;
+}
+
+.notes-shell {
+  gap: var(--space-5);
+}
+
+.notes-tree,
+.notes-list,
+.notes-detail {
+  background: color-mix(in srgb, var(--color-surface) 95%, #f6fbfa);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.notes-tree__item {
+  min-height: 42px;
+  transition: background 140ms ease;
+}
+
+.notes-tree__item:hover {
+  background: var(--color-surface-muted);
+}
+
+.notes-tree__label { font-weight: 500; }
+
+.notes-list {
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+.notes-list__search-label {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.notes-list__item {
+  background: color-mix(in srgb, var(--color-surface) 92%, #f8fcfc);
+}
+
+.notes-list__title {
+  font-size: 15px;
+}
+
+.notes-detail {
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+}
+
+.notes-detail__title-input {
+  font-size: 18px;
+  font-weight: 650;
+}
+
+.notes-detail__textarea,
+.notes-modal__textarea,
+.block-textarea {
+  background: #fcfdff;
+}
+
+.settings-page {
+  gap: var(--space-5);
+  max-width: 960px;
+}
+
+.settings-card {
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+}
+
+.settings-card__header h2 {
+  font-size: 20px;
+}
+
+.settings-success,
+.settings-error {
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+}
+
+.settings-success {
+  background: var(--color-success-soft);
+  border-color: color-mix(in srgb, var(--color-success) 35%, transparent);
+}
+
+.settings-error {
+  background: var(--color-danger-soft);
+  border-color: color-mix(in srgb, var(--color-danger) 35%, transparent);
+}
+
+.editor-title-input {
+  background: color-mix(in srgb, var(--color-surface) 95%, #effaf7);
+}
+
+.editor-status-row {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.block-card {
+  border-radius: var(--radius-lg);
+}
+
+
+@media (min-width: 960px) {
+  .app-header { padding-inline: var(--space-6); }
+}

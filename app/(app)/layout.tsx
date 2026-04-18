@@ -8,9 +8,9 @@ type AppLayoutProps = {
 };
 
 const navItems = [
-  { href: '/', label: 'Home' },
-  { href: '/trash', label: 'Trash' },
-  { href: '/settings', label: 'Settings' }
+  { href: '/', label: 'ホーム' },
+  { href: '/trash', label: 'ゴミ箱' },
+  { href: '/settings', label: '設定' }
 ];
 
 export default async function AppLayout({ children }: AppLayoutProps) {
@@ -21,7 +21,10 @@ export default async function AppLayout({ children }: AppLayoutProps) {
       <div className="app-content">
         <header className="app-header">
           <div className="app-header__row">
-            <div className="app-header__title">Welcome back, {user.name}</div>
+            <div>
+              <div className="app-header__eyebrow">Workspace</div>
+              <div className="app-header__title">{user.name} さんのノート</div>
+            </div>
           </div>
           <details className="app-header__profile">
             <summary
