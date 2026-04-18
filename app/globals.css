@@ -1925,8 +1925,12 @@ body {
     display: grid;
     grid-template-rows: auto minmax(0, 1fr);
     width: 100%;
-    max-height: 100dvh;
-    min-height: calc(100dvh - 12px);
+    max-height: calc(
+      100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 12px
+    );
+    min-height: calc(
+      100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 12px
+    );
     padding: 10px;
     gap: 8px;
   }
@@ -1949,6 +1953,7 @@ body {
     grid-template-rows: auto minmax(0, 1fr);
     gap: 8px;
     min-height: 0;
+    height: 100%;
   }
 
   .notes-modal__body .notes-detail__field {
@@ -1961,13 +1966,16 @@ body {
   }
 
   .notes-modal__textarea-wrapper {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
     min-height: 0;
+    height: 100%;
     align-content: stretch;
   }
 
   .notes-modal__textarea {
-    min-height: 0;
-    height: calc(100dvh - 180px);
+    min-height: max(52dvh, 360px);
+    height: 100%;
     padding: 10px 10px 8px;
   }
 
