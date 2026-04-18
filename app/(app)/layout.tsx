@@ -10,9 +10,9 @@ type AppLayoutProps = {
 };
 
 const navItems = [
-  { href: '/', label: 'ホーム', short: 'H' },
-  { href: '/trash', label: 'ゴミ箱', short: 'T' },
-  { href: '/settings', label: '設定', short: 'S' }
+  { href: '/', label: 'ホーム' },
+  { href: '/trash', label: 'ゴミ箱' },
+  { href: '/settings', label: '設定' }
 ];
 
 export default async function AppLayout({ children }: AppLayoutProps) {
@@ -20,26 +20,10 @@ export default async function AppLayout({ children }: AppLayoutProps) {
 
   return (
     <div className="app-shell">
-      <aside className="app-rail" aria-label="グローバルナビゲーション">
-        <div className="app-rail__brand" aria-label="Acoru Memo">
-          A
-        </div>
-        <nav className="app-rail__nav">
-          {navItems.map((item) => (
-            <Link key={item.href} className="app-rail__link" href={item.href}>
-              <span className="app-rail__short" aria-hidden="true">
-                {item.short}
-              </span>
-              <span className="sr-only">{item.label}</span>
-            </Link>
-          ))}
-        </nav>
-      </aside>
-
       <div className="app-content">
         <header className="app-header">
           <div className="app-header__row">
-            <MobileDrawer items={navItems.map(({ href, label }) => ({ href, label }))} />
+            <MobileDrawer items={navItems} />
             <div>
               <div className="app-header__eyebrow">Workspace</div>
               <div className="app-header__title">{user.name} さんのノート</div>
