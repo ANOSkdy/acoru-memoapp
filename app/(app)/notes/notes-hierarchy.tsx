@@ -593,7 +593,7 @@ export default function NotesHierarchy() {
               className={`notes-tree__item ${
                 selectedParentId === folder.id ? 'notes-tree__item--active' : ''
               }`}
-              style={{ paddingLeft: `${depth * 16}px` }}
+              style={{ paddingInlineStart: `calc(${depth} * var(--space-4))` }}
             >
               <button
                 className="notes-tree__toggle"
@@ -686,6 +686,7 @@ export default function NotesHierarchy() {
             <div>
               <h2>{currentFolderLabel}</h2>
               <div className="notes-list__edit">
+                <span className="notes-list__search-label">検索</span>
                 <input
                   className="notes-list__input"
                   type="search"
@@ -701,7 +702,7 @@ export default function NotesHierarchy() {
                     onClick={() => setSearchQuery('')}
                     aria-label="検索条件をクリア"
                   >
-                    クリア
+                    検索クリア
                   </button>
                 ) : null}
                 {isSearching ? (
@@ -744,7 +745,7 @@ export default function NotesHierarchy() {
                     deleteFolderPending ? 'フォルダ削除中' : 'フォルダを削除'
                   }
                 >
-                  ×
+                  フォルダ削除
                 </button>
               ) : null}
             </div>
@@ -841,7 +842,7 @@ export default function NotesHierarchy() {
                   isModalOpen ? '拡大編集を閉じる' : '拡大編集を開く'
                 }
               >
-                {isModalOpen ? '⤡' : '⤢'}
+                {isModalOpen ? '通常表示' : '拡大表示'}
               </button>
               <button
                 className="button button--plain"
@@ -850,7 +851,7 @@ export default function NotesHierarchy() {
                 disabled={!selectedPageId || savePending || !isDirty}
                 aria-label={savePending ? '保存中' : '保存'}
               >
-                ■
+                {savePending ? '保存中…' : '保存'}
               </button>
               <button
                 className="button button--plain"
@@ -859,7 +860,7 @@ export default function NotesHierarchy() {
                 disabled={!selectedPageId || deletePending}
                 aria-label={deletePending ? '削除中' : '削除'}
               >
-                ×
+                {deletePending ? '削除中…' : '削除'}
               </button>
             </div>
           </div>
@@ -933,7 +934,7 @@ export default function NotesHierarchy() {
                   onClick={() => setIsModalOpen(false)}
                   aria-label="拡大編集を閉じる"
                 >
-                  ×
+                  閉じる
                 </button>
               </div>
               <div className="notes-modal__body">

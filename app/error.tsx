@@ -10,37 +10,25 @@ export default function GlobalError({
   reset: () => void;
 }) {
   return (
-    <div className="auth-card">
-      <div className="center-stack">
-        <h1 style={{ marginBottom: 0 }}>Something went wrong</h1>
-        <p style={{ color: 'var(--color-text-muted)' }}>
-          An unexpected error occurred. Please try again or return home.
+    <div className="status-page">
+      <div className="status-card">
+        <p className="status-code">Error</p>
+        <h1 className="status-title">問題が発生しました</h1>
+        <p className="status-description">
+          一時的な不具合の可能性があります。再試行してください。
         </p>
-        <div className="center-stack">
-          <button
-            type="button"
-            onClick={reset}
-            style={{
-              border: 'none',
-              padding: '10px 14px',
-              borderRadius: '10px',
-              background: 'var(--color-primary)',
-              color: 'white',
-              cursor: 'pointer'
-            }}
-          >
-            Try again
+        <div className="status-actions">
+          <button className="button" type="button" onClick={reset}>
+            再試行
           </button>
-          <Link className="app-sidebar__link" href="/">
-            Back to home
+          <Link className="button button--ghost" href="/">
+            ホームへ
           </Link>
         </div>
+        {process.env.NODE_ENV !== 'production' && error?.message ? (
+          <p className="status-dev-message">{error.message}</p>
+        ) : null}
       </div>
-      {process.env.NODE_ENV !== 'production' && error?.message ? (
-        <p style={{ marginTop: 16, color: 'var(--color-text-muted)' }}>
-          {error.message}
-        </p>
-      ) : null}
     </div>
   );
 }

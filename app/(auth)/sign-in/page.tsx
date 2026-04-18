@@ -4,18 +4,21 @@ export const runtime = 'nodejs';
 
 export default function SignInPage() {
   return (
-    <div className="auth-card">
-      <div className="center-stack">
-        <div>
-          <h1 style={{ marginBottom: 8 }}>Sign in</h1>
-          <p style={{ color: 'var(--color-text-muted)', margin: 0 }}>
-            Welcome back. Please enter your credentials to continue.
+    <div className="auth-layout">
+      <div className="auth-card">
+        <div className="center-stack auth-stack">
+          <div className="auth-brand">Acoru Memo</div>
+          <div>
+            <h1 className="auth-title">サインイン</h1>
+            <p className="auth-description">
+              いつものワークスペースに接続して、ノートを続きから編集しましょう。
+            </p>
+          </div>
+          <SignInForm />
+          <p className="auth-help">
+            ログインできない場合は、管理者へパスワード再設定を依頼してください。
           </p>
         </div>
-        <SignInForm />
-        <p style={{ color: 'var(--color-text-muted)', fontSize: 13, margin: 0 }}>
-          Having trouble? Ask an administrator to reset your password.
-        </p>
       </div>
     </div>
   );
