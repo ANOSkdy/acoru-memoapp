@@ -651,6 +651,7 @@ export default function NotesHierarchy() {
   return (
     <div className="notes-shell">
       <aside className="notes-tree">
+        <div className="notes-pane__label">Structure</div>
         <div className="notes-tree__header">フォルダツリー</div>
         <div className="notes-tree__node">
           <div
@@ -681,7 +682,9 @@ export default function NotesHierarchy() {
         </div>
       </aside>
       <section className="notes-panel">
+        <div className="notes-panel__structure">
         <div className="notes-list">
+          <div className="notes-pane__label">Notes</div>
           <div className="notes-list__header">
             <div>
               <h2>{currentFolderLabel}</h2>
@@ -830,8 +833,10 @@ export default function NotesHierarchy() {
             </>
           ) : null}
         </div>
+        </div>
         <div className="notes-detail">
           <div className="notes-detail__header">
+            <div className="notes-pane__label">Editor</div>
             <div className="notes-detail__actions">
               <button
                 className="button button--plain"

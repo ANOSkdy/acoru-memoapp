@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { requireUser } from '@/lib/auth';
 import { signOut } from '@/lib/auth/actions';
 
+import MobileDrawer from './MobileDrawer';
+
 type AppLayoutProps = {
   children: ReactNode;
 };
@@ -21,6 +23,7 @@ export default async function AppLayout({ children }: AppLayoutProps) {
       <div className="app-content">
         <header className="app-header">
           <div className="app-header__row">
+            <MobileDrawer items={navItems} />
             <div>
               <div className="app-header__eyebrow">Workspace</div>
               <div className="app-header__title">{user.name} さんのノート</div>
