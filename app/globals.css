@@ -1,19 +1,45 @@
 :root {
   color-scheme: light;
-  --color-bg: #ffffff;
+  --font-sans: 'Inter', 'Noto Sans JP', system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --color-bg: #f3f6f9;
   --color-surface: #ffffff;
-  --color-surface-muted: #f1efe9;
-  --color-text: #1d1d1f;
-  --color-text-muted: #6c6f76;
-  --color-border: #e2dfd8;
-  --color-primary: #2f6fed;
-  --color-primary-ink: #0b1b3a;
-  --color-danger: #c62828;
-  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.08);
-  --shadow-md: 0 6px 20px rgba(16, 24, 40, 0.12);
+  --color-surface-muted: #ecf1f5;
+  --color-surface-elevated: #ffffff;
+  --color-text: #16202a;
+  --color-text-muted: #5e7082;
+  --color-text-disabled: #8ea0b2;
+  --color-border: #d7e0e8;
+  --color-border-strong: #b8c6d3;
+  --color-primary: #0b7a75;
+  --color-primary-hover: #096560;
+  --color-primary-soft: #e4f5f3;
+  --color-primary-ink: #084441;
+  --color-focus-ring: #39b6ad;
+  --color-success: #1f9d68;
+  --color-success-soft: #e7f7ef;
+  --color-warning: #b7791f;
+  --color-warning-soft: #fff4e5;
+  --color-danger: #c53a50;
+  --color-danger-soft: #fdecf0;
+  --color-info: #2e6fd8;
+  --color-info-soft: #eaf1ff;
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 12px 28px rgba(15, 23, 42, 0.1);
+  --shadow-lg: 0 24px 54px rgba(15, 23, 42, 0.14);
   --radius-lg: 20px;
-  --radius-md: 12px;
-  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-sm: 10px;
+  --radius-xs: 6px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
 }
 
 * {
@@ -22,9 +48,11 @@
 
 body {
   margin: 0;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: var(--font-sans);
   color: var(--color-text);
   background: var(--color-bg);
+  line-height: 1.5;
+  text-rendering: optimizeLegibility;
 }
 
 body.drawer-open {
@@ -37,11 +65,23 @@ a {
   text-decoration: none;
 }
 
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
 .app-shell {
   min-height: 100vh;
   min-height: 100dvh;
   display: flex;
-  background: var(--color-bg);
+  background: linear-gradient(180deg, #f7fafd 0%, var(--color-bg) 100%);
   overflow-x: hidden;
 }
 
@@ -54,7 +94,7 @@ a {
 }
 
 .app-header {
-  background: var(--color-surface);
+  background: color-mix(in srgb, var(--color-surface) 92%, #f4fbfa);
   border-bottom: 1px solid var(--color-border);
   padding: 12px 16px;
   display: flex;
@@ -89,7 +129,7 @@ a {
   justify-content: center;
   border-radius: 999px;
   border: 1px solid var(--color-border);
-  background: var(--color-surface);
+  background: var(--color-surface-elevated);
   width: 40px;
   height: 40px;
   cursor: pointer;
@@ -117,7 +157,7 @@ a {
   right: 0;
   top: calc(100% + 8px);
   min-width: 220px;
-  background: var(--color-surface);
+  background: var(--color-surface-elevated);
   border: 1px solid var(--color-border);
   box-shadow: var(--shadow-sm);
   border-radius: var(--radius-md);
@@ -151,6 +191,10 @@ a {
   background: var(--color-surface-muted);
 }
 
+.app-header__profile-link:focus-visible {
+  background: var(--color-primary-soft);
+}
+
 .app-main {
   padding: 24px 16px 48px;
   max-width: 100%;
@@ -173,7 +217,7 @@ a {
 }
 
 .card {
-  background: var(--color-surface);
+  background: var(--color-surface-elevated);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
   padding: 20px;
@@ -210,7 +254,7 @@ a {
   inset: 0 30% 0 0;
   max-width: 320px;
   width: min(85vw, 320px);
-  background: var(--color-surface);
+  background: var(--color-surface-elevated);
   box-shadow: var(--shadow-md);
   border-right: 1px solid var(--color-border);
   padding: 20px 16px;
@@ -287,13 +331,13 @@ a {
   padding: 10px 12px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--color-border);
-  background: var(--color-surface-muted);
+  background: var(--color-surface);
   color: var(--color-text);
   font-size: 14px;
 }
 
 .auth-input:focus {
-  outline: 2px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--color-focus-ring) 45%, transparent);
   border-color: var(--color-primary);
 }
 
@@ -482,8 +526,8 @@ a {
 }
 
 .notes-list__item--active {
-  border-color: rgba(99, 102, 241, 0.5);
-  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.25);
+  border-color: color-mix(in srgb, var(--color-primary) 56%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-primary) 35%, transparent);
 }
 
 .notes-list__item-main {
@@ -786,7 +830,7 @@ a {
   padding: 10px 12px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--color-warning);
-  background: rgba(244, 208, 63, 0.15);
+  background: var(--color-warning-soft);
   font-size: 13px;
 }
 
@@ -904,21 +948,36 @@ a {
   min-height: 44px;
 }
 
+.button:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+}
+
 .button:disabled {
-  opacity: 0.7;
+  opacity: 0.65;
+  color: var(--color-text-disabled);
   cursor: not-allowed;
 }
 
 .button--ghost {
-  background: transparent;
+  background: var(--color-surface);
   color: var(--color-primary-ink);
   border-color: var(--color-border);
 }
 
+.button--ghost:hover:not(:disabled) {
+  background: var(--color-surface-muted);
+}
+
 .button--danger {
-  background: #c0392b;
-  border-color: #c0392b;
+  background: var(--color-danger);
+  border-color: var(--color-danger);
   color: white;
+}
+
+.button--danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-danger) 84%, black);
+  border-color: color-mix(in srgb, var(--color-danger) 84%, black);
 }
 
 .button--plain {
@@ -999,13 +1058,13 @@ a {
 }
 
 .editor-banner--warning {
-  border-color: rgba(255, 149, 0, 0.4);
-  background: #fff7ec;
+  border-color: color-mix(in srgb, var(--color-warning) 42%, transparent);
+  background: var(--color-warning-soft);
 }
 
 .editor-banner--danger {
-  border-color: rgba(198, 40, 40, 0.4);
-  background: #fff0f0;
+  border-color: color-mix(in srgb, var(--color-danger) 42%, transparent);
+  background: var(--color-danger-soft);
 }
 
 .editor-banner--muted {
