@@ -1173,6 +1173,37 @@ textarea {
   word-break: break-word;
 }
 
+.page-editor,
+.page-editor__block-list,
+.page-editor__block-card,
+.page-editor__block-textarea {
+  min-width: 0;
+  max-width: 100%;
+}
+
+@media (max-width: 959px) {
+  .page-editor {
+    width: 100%;
+    overflow-x: clip;
+  }
+
+  .page-editor__block-list {
+    gap: 12px;
+    min-height: 0;
+    overflow-y: visible;
+    overflow-x: clip;
+  }
+
+  .page-editor__block-card {
+    min-height: 220px;
+    padding: 12px;
+  }
+
+  .page-editor__block-textarea {
+    min-height: 200px;
+  }
+}
+
 .block-divider {
   height: 2px;
   background: var(--color-border);
