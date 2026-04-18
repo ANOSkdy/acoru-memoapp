@@ -1841,3 +1841,86 @@ body {
     height: calc(100dvh - 142px);
   }
 }
+
+/* PR3 follow-up: mobile overflow and responsive optimization */
+html,
+body {
+  overflow-x: hidden;
+}
+
+.notes-shell,
+.notes-panel,
+.notes-panel__structure,
+.notes-tree,
+.notes-list,
+.notes-detail,
+.home-list,
+.home-list__item,
+.settings-card,
+.auth-card,
+.status-card {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+@media (max-width: 959px) {
+  .app-main {
+    padding: 12px;
+  }
+
+  .notes-shell {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    min-height: auto;
+  }
+
+  .notes-panel,
+  .notes-panel__structure {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .notes-tree,
+  .notes-list,
+  .notes-detail {
+    height: auto;
+    overflow: visible;
+  }
+
+  .notes-list {
+    padding: 12px;
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+  }
+
+  .notes-list__header,
+  .notes-list__actions,
+  .notes-list__edit {
+    display: grid;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .notes-list__items {
+    max-height: min(46vh, 420px);
+  }
+
+  .notes-list__pager {
+    position: static;
+    border-top: none;
+    padding: 8px 0 0;
+  }
+
+  .notes-list__pager .button,
+  .notes-detail__actions .button {
+    min-height: 40px;
+  }
+
+  .notes-detail__actions {
+    width: 100%;
+  }
+
+  .notes-detail__title-input {
+    font-size: clamp(20px, 7vw, 26px);
+  }
+}
