@@ -1914,6 +1914,68 @@ body {
 }
 
 @media (max-width: 959px) {
+  .notes-modal {
+    padding: max(6px, env(safe-area-inset-top))
+      max(6px, env(safe-area-inset-right))
+      max(6px, env(safe-area-inset-bottom))
+      max(6px, env(safe-area-inset-left));
+  }
+
+  .notes-modal__panel {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    width: 100%;
+    max-height: 100dvh;
+    min-height: calc(100dvh - 12px);
+    padding: 10px;
+    gap: 8px;
+  }
+
+  .notes-modal__header {
+    gap: 8px;
+  }
+
+  .notes-modal__title {
+    font-size: 12px;
+  }
+
+  .notes-modal__header .button {
+    min-height: 38px;
+    padding: 6px 10px;
+  }
+
+  .notes-modal__body {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 8px;
+    min-height: 0;
+  }
+
+  .notes-modal__body .notes-detail__field {
+    gap: 4px;
+  }
+
+  .notes-modal__body .notes-detail__title-input {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+
+  .notes-modal__textarea-wrapper {
+    min-height: 0;
+    align-content: stretch;
+  }
+
+  .notes-modal__textarea {
+    min-height: 0;
+    height: calc(100dvh - 180px);
+    padding: 10px 10px 8px;
+  }
+
+  .notes-modal__textarea-wrapper .notes-detail__updated-at {
+    margin-top: 2px;
+    font-size: 11px;
+  }
+
   .app-main {
     padding: 12px;
   }
