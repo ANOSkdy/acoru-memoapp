@@ -2087,6 +2087,9 @@ body {
 .notes-modal__textarea-wrapper {
   display: grid;
   gap: 6px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .notes-detail__textarea,
@@ -2102,12 +2105,28 @@ body {
   padding-bottom: 14px;
 }
 
+.notes-detail,
+.notes-detail__header,
+.notes-detail__actions,
+.notes-detail__body,
+.notes-detail__field {
+  min-width: 0;
+}
+
+.notes-detail__title-input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
 .notes-detail__updated-at {
   position: static;
   display: block;
   margin-top: 0;
   text-align: right;
   font-size: 12px;
+  overflow-wrap: anywhere;
 }
 
 @media (max-width: 1200px) {
@@ -2119,5 +2138,11 @@ body {
 
   .notes-detail__actions .button:last-child {
     grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 959px) {
+  .notes-detail__actions .button {
+    min-width: 0;
   }
 }
