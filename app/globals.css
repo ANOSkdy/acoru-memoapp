@@ -2216,3 +2216,30 @@ body {
     min-width: 0;
   }
 }
+
+.notes-detail__actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+  width: 100%;
+  align-items: center;
+}
+
+.notes-detail__action {
+  min-width: 0;
+}
+
+.notes-detail__action--expand {
+  justify-self: start;
+}
+
+.notes-detail__action--delete {
+  justify-self: end;
+}
+
+.notes-detail__action--save {
+  grid-column: 1 / -1;
+  justify-self: center;
+  min-width: min(220px, 100%);
+  padding-inline: 22px;
+}

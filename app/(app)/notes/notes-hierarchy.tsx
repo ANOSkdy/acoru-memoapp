@@ -839,7 +839,7 @@ export default function NotesHierarchy() {
             <div className="notes-pane__label">Editor</div>
             <div className="notes-detail__actions">
               <button
-                className="button button--plain"
+                className="button button--ghost notes-detail__action notes-detail__action--expand"
                 type="button"
                 onClick={() => setIsModalOpen((prev) => !prev)}
                 disabled={!selectedPageId}
@@ -850,7 +850,7 @@ export default function NotesHierarchy() {
                 {isModalOpen ? '通常表示' : '拡大表示'}
               </button>
               <button
-                className="button button--plain"
+                className="button notes-detail__action notes-detail__action--save"
                 type="button"
                 onClick={handleSaveMemo}
                 disabled={!selectedPageId || savePending || !isDirty}
@@ -859,7 +859,7 @@ export default function NotesHierarchy() {
                 {savePending ? '保存中…' : '保存'}
               </button>
               <button
-                className="button button--plain"
+                className="button button--ghost notes-detail__action notes-detail__action--delete"
                 type="button"
                 onClick={handleDeleteMemo}
                 disabled={!selectedPageId || deletePending}
