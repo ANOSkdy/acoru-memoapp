@@ -2120,7 +2120,7 @@ body {
     line-height: 1.25;
   }
 
-  .notes-detail__actions .button:last-child {
+  .notes-detail__action--save {
     grid-column: 1 / -1;
   }
 
@@ -2206,7 +2206,7 @@ body {
     gap: 8px;
   }
 
-  .notes-detail__actions .button:last-child {
+  .notes-detail__action--save {
     grid-column: 1 / -1;
   }
 }
