@@ -2199,7 +2199,7 @@ body {
   overflow-wrap: anywhere;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 959px) {
   .notes-detail__actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -2218,11 +2218,12 @@ body {
 }
 
 .notes-detail__actions {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   width: 100%;
   align-items: center;
+  justify-content: flex-start;
 }
 
 .notes-detail__action {
@@ -2230,16 +2231,16 @@ body {
 }
 
 .notes-detail__action--expand {
-  justify-self: start;
+  justify-self: auto;
 }
 
 .notes-detail__action--delete {
-  justify-self: end;
+  justify-self: auto;
 }
 
 .notes-detail__action--save {
-  grid-column: 1 / -1;
-  justify-self: center;
+  flex-basis: 100%;
+  margin-inline: auto;
   min-width: min(220px, 100%);
   padding-inline: 22px;
 }
