@@ -850,15 +850,6 @@ export default function NotesHierarchy() {
                 {isModalOpen ? '通常表示' : '拡大表示'}
               </button>
               <button
-                className="button notes-detail__action notes-detail__action--save"
-                type="button"
-                onClick={handleSaveMemo}
-                disabled={!selectedPageId || savePending || !isDirty}
-                aria-label={savePending ? '保存中' : '保存'}
-              >
-                {savePending ? '保存中…' : '保存'}
-              </button>
-              <button
                 className="button button--ghost notes-detail__action notes-detail__action--delete"
                 type="button"
                 onClick={handleDeleteMemo}
@@ -866,6 +857,15 @@ export default function NotesHierarchy() {
                 aria-label={deletePending ? '削除中' : '削除'}
               >
                 {deletePending ? '削除中…' : '削除'}
+              </button>
+              <button
+                className="button notes-detail__action notes-detail__action--save"
+                type="button"
+                onClick={handleSaveMemo}
+                disabled={!selectedPageId || savePending || !isDirty}
+                aria-label={savePending ? '保存中' : '保存'}
+              >
+                {savePending ? '保存中…' : '保存'}
               </button>
             </div>
           </div>
