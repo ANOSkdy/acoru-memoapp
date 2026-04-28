@@ -1,0 +1,296 @@
+/*
+ * Shared motion layer for Acoru Memo.
+ * Keep transitions CSS-only and scoped to existing UI classes so the app remains dependency-free.
+ */
+:root {
+  --motion-fast: 120ms;
+  --motion-base: 180ms;
+  --motion-slow: 260ms;
+  --motion-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+}
+
+@keyframes t-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes t-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes t-scale-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes t-slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes t-pop {
+  0% {
+    transform: scale(0.96);
+  }
+  70% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.app-main,
+.auth-card,
+.settings-header,
+.notes-shell,
+.editor-shell {
+  animation: t-rise-in var(--motion-slow) var(--motion-ease-out) both;
+}
+
+.app-header {
+  transition:
+    background-color var(--motion-base) var(--motion-ease-standard),
+    box-shadow var(--motion-base) var(--motion-ease-standard),
+    border-color var(--motion-base) var(--motion-ease-standard);
+}
+
+.app-header__profile-trigger,
+.mobile-drawer__trigger,
+.mobile-drawer__close,
+.button,
+.notes-tree__toggle,
+.notes-tree__label,
+.notes-list__title-button,
+.settings-checkbox__input,
+.block-select,
+.block-input,
+.auth-input,
+.settings-input,
+.settings-select,
+.editor-title-input,
+.notes-detail__title-input {
+  transition:
+    background-color var(--motion-fast) var(--motion-ease-standard),
+    border-color var(--motion-fast) var(--motion-ease-standard),
+    box-shadow var(--motion-fast) var(--motion-ease-standard),
+    color var(--motion-fast) var(--motion-ease-standard),
+    opacity var(--motion-fast) var(--motion-ease-standard),
+    transform var(--motion-fast) var(--motion-ease-standard);
+}
+
+.app-header__profile-trigger:hover,
+.mobile-drawer__trigger:hover,
+.mobile-drawer__close:hover,
+.button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.button:active:not(:disabled),
+.mobile-drawer__trigger:active,
+.mobile-drawer__close:active,
+.app-header__profile-trigger:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.app-header__profile[open] .app-header__profile-menu {
+  animation: t-scale-in var(--motion-base) var(--motion-ease-out) both;
+  transform-origin: top right;
+}
+
+.app-header__profile-link,
+.mobile-drawer__link {
+  transition:
+    background-color var(--motion-fast) var(--motion-ease-standard),
+    color var(--motion-fast) var(--motion-ease-standard),
+    transform var(--motion-fast) var(--motion-ease-standard);
+}
+
+.app-header__profile-link:hover,
+.mobile-drawer__link:hover {
+  transform: translateX(2px);
+}
+
+.mobile-drawer__backdrop {
+  animation: t-fade-in var(--motion-base) var(--motion-ease-standard) both;
+}
+
+.mobile-drawer__panel {
+  animation: t-slide-in-left var(--motion-slow) var(--motion-ease-out) both;
+  will-change: transform;
+}
+
+.card,
+.settings-card,
+.home-list__item,
+.notes-detail,
+.notes-list__item,
+.block-card,
+.editor-banner {
+  transition:
+    border-color var(--motion-base) var(--motion-ease-standard),
+    box-shadow var(--motion-base) var(--motion-ease-standard),
+    opacity var(--motion-base) var(--motion-ease-standard),
+    transform var(--motion-base) var(--motion-ease-standard);
+}
+
+.card:hover,
+.settings-card:hover,
+.home-list__item:hover,
+.notes-list__item:hover,
+.block-card:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.notes-list__item--active {
+  animation: t-pop var(--motion-base) var(--motion-ease-out) both;
+}
+
+.notes-list__item--placeholder:hover,
+.block-card:focus-within,
+.notes-detail:focus-within,
+.settings-card:focus-within,
+.auth-card:focus-within {
+  transform: none;
+}
+
+.notes-tree__children,
+.notes-tree__loading,
+.notes-tree__empty {
+  animation: t-rise-in var(--motion-base) var(--motion-ease-out) both;
+}
+
+.notes-tree__item {
+  transition:
+    background-color var(--motion-fast) var(--motion-ease-standard),
+    transform var(--motion-fast) var(--motion-ease-standard);
+}
+
+.notes-tree__item:hover {
+  transform: translateX(2px);
+}
+
+.notes-list__items--loading {
+  opacity: 0.62;
+  transition: opacity var(--motion-base) var(--motion-ease-standard);
+}
+
+.notes-detail__body,
+.notes-detail__empty,
+.notes-detail__error,
+.notes-detail__meta,
+.notes-list__empty,
+.notes-list__empty-message,
+.auth-error,
+.settings-error,
+.settings-success,
+.settings-warning,
+.settings-temp {
+  animation: t-rise-in var(--motion-base) var(--motion-ease-out) both;
+}
+
+.settings-success,
+.settings-temp__row .settings-input[readonly] {
+  animation-name: t-pop;
+}
+
+.notes-modal {
+  animation: t-fade-in var(--motion-base) var(--motion-ease-standard) both;
+}
+
+.notes-modal__panel {
+  animation: t-scale-in var(--motion-slow) var(--motion-ease-out) both;
+  transform-origin: center;
+}
+
+.editor-banner {
+  animation: t-rise-in var(--motion-base) var(--motion-ease-out) both;
+}
+
+.block-card {
+  animation: t-rise-in var(--motion-slow) var(--motion-ease-out) both;
+}
+
+.block-card:nth-child(2) {
+  animation-delay: 24ms;
+}
+
+.block-card:nth-child(3) {
+  animation-delay: 48ms;
+}
+
+.block-card:nth-child(n + 4) {
+  animation-delay: 72ms;
+}
+
+.block-textarea,
+.notes-detail__textarea,
+.notes-modal__textarea {
+  transition:
+    border-color var(--motion-fast) var(--motion-ease-standard),
+    box-shadow var(--motion-fast) var(--motion-ease-standard),
+    background-color var(--motion-fast) var(--motion-ease-standard);
+}
+
+.block-textarea:focus,
+.notes-detail__textarea:focus,
+.notes-modal__textarea:focus,
+.auth-input:focus,
+.settings-input:focus,
+.settings-select:focus,
+.editor-title-input:focus,
+.notes-detail__title-input:focus {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-focus-ring) 22%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+  }
+
+  .app-header__profile-trigger:hover,
+  .mobile-drawer__trigger:hover,
+  .mobile-drawer__close:hover,
+  .button:hover:not(:disabled),
+  .card:hover,
+  .settings-card:hover,
+  .home-list__item:hover,
+  .notes-list__item:hover,
+  .block-card:hover,
+  .notes-tree__item:hover,
+  .app-header__profile-link:hover,
+  .mobile-drawer__link:hover {
+    transform: none !important;
+  }
+}
