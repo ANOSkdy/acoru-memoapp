@@ -267,6 +267,7 @@ export default function PageEditor({
               type="button"
               onClick={() => void saveNow()}
               disabled={isSaving}
+              aria-label="保存"
             >
               <span aria-hidden="true">💾</span>
               <span className="sr-only">保存</span>
@@ -276,11 +277,15 @@ export default function PageEditor({
               type="button"
               onClick={handleMoveToTrash}
               disabled={trashPending}
+              aria-label="ゴミ箱へ移動"
             >
               <span aria-hidden="true">🗑️</span>
               <span className="sr-only">ゴミ箱へ移動</span>
             </button>
           </div>
+          <p className="editor-status" role="status" aria-live="polite">
+            {isSaving ? "保存中…" : trashPending ? "ゴミ箱へ移動中…" : ""}
+          </p>
         </div>
       </div>
 
@@ -291,7 +296,7 @@ export default function PageEditor({
           </div>
           <div className="editor-banner__actions">
             <button className="button" type="button" onClick={reloadFromServer}>
-              Reload
+              再読み込み
             </button>
             <button
               className="button button--ghost"
@@ -304,7 +309,7 @@ export default function PageEditor({
                 }));
               }}
             >
-              Dismiss
+              閉じる
             </button>
           </div>
         </div>
@@ -315,7 +320,7 @@ export default function PageEditor({
           <div>競合のため保存を停止しています。</div>
           <div className="editor-banner__actions">
             <button className="button" type="button" onClick={reloadFromServer}>
-              Reload
+              再読み込み
             </button>
             <button
               className="button button--ghost"

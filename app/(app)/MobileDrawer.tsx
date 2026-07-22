@@ -2,11 +2,9 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
-type NavItem = {
-  href: string;
-  label: string;
-};
+import { isNavItemActive, type NavItem } from "./nav-items";
 
 type MobileDrawerProps = {
   items: NavItem[];
@@ -24,6 +22,7 @@ const getFocusableElements = (container: HTMLElement | null) => {
 
 export default function MobileDrawer({ items }: MobileDrawerProps) {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname() ?? "/";
   const controlsId = useId();
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
@@ -105,9 +104,10 @@ export default function MobileDrawer({ items }: MobileDrawerProps) {
         type="button"
         aria-expanded={open}
         aria-controls={controlsId}
+        aria-label="メニューを開く"
         onClick={() => setOpen(true)}
       >
-        Menu
+        メニュー
       </button>
 
       {open && (
@@ -122,7 +122,7 @@ export default function MobileDrawer({ items }: MobileDrawerProps) {
             id={controlsId}
             role="dialog"
             aria-modal="true"
-            aria-label="Main navigation"
+            aria-label="メインナビゲーション"
             ref={panelRef}
           >
             <div className="mobile-drawer__header">
@@ -130,9 +130,10 @@ export default function MobileDrawer({ items }: MobileDrawerProps) {
               <button
                 className="mobile-drawer__close"
                 type="button"
+                aria-label="メニューを閉じる"
                 onClick={() => setOpen(false)}
               >
-                Close
+                閉じる
               </button>
             </div>
             <nav className="mobile-drawer__nav">
@@ -141,6 +142,9 @@ export default function MobileDrawer({ items }: MobileDrawerProps) {
                   key={item.href}
                   className="mobile-drawer__link"
                   href={item.href}
+                  aria-current={
+                    isNavItemActive(pathname, item.href) ? "page" : undefined
+                  }
                   onClick={() => setOpen(false)}
                 >
                   {item.label}

@@ -6,4 +6,5 @@ out
 .env.*.local
 .vercel
 pnpm-lock.yaml
+tsconfig.tsbuildinfo
 .env*.local

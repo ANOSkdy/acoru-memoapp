@@ -1,14 +1,21 @@
 import 'server-only';
 
+import { cache } from 'react';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { sql } from '@/lib/db';
 import { hashSessionToken, SESSION_COOKIE_NAME } from '@/lib/auth/session';
+import { getWorkspaceIdForUser } from '@/lib/workspaces';
 
 export type SessionUser = {
   id: string;
   name: string;
   email: string;
+};
+
+export type SessionContext = {
+  user: SessionUser | null;
+  workspaceId: string | null;
 };
 
 const isProduction = process.env.NODE_ENV === 'production';
@@ -29,15 +36,22 @@ const getBypassUser = (): SessionUser | null => {
   return { id, name, email };
 };
 
-export const getSessionUser = async (): Promise<SessionUser | null> => {
+/**
+ * Resolves the signed-in user and their workspace in a single round trip.
+ * Memoized per request so a layout, a page and a nested component share one query.
+ */
+export const getSessionContext = cache(async (): Promise<SessionContext> => {
   const bypassUser = getBypassUser();
   if (bypassUser) {
-    return bypassUser;
+    return {
+      user: bypassUser,
+      workspaceId: await getWorkspaceIdForUser(bypassUser.id)
+    };
   }
 
   const token = cookies().get(SESSION_COOKIE_NAME)?.value;
   if (!token || !sql) {
-    return null;
+    return { user: null, workspaceId: null };
   }
 
   const tokenHash = hashSessionToken(token);
@@ -45,24 +59,34 @@ export const getSessionUser = async (): Promise<SessionUser | null> => {
     select
       users.id,
       coalesce(users.display_name, users.email) as name,
-      users.email
+      users.email,
+      workspaces.id as "workspaceId"
     from sessions
     join users on sessions.user_id = users.id
+    left join workspaces on workspaces.owner_user_id = users.id
     where sessions.token_hash = ${tokenHash}
       and (sessions.expires_at is null or sessions.expires_at > now())
     limit 1;
   `;
 
   if (rows.length === 0) {
-    return null;
+    return { user: null, workspaceId: null };
   }
 
   const row = rows[0];
   return {
-    id: row.id,
-    name: row.name,
-    email: row.email
+    user: {
+      id: row.id,
+      name: row.name,
+      email: row.email
+    },
+    workspaceId: (row.workspaceId as string | null) ?? null
   };
+});
+
+export const getSessionUser = async (): Promise<SessionUser | null> => {
+  const { user } = await getSessionContext();
+  return user;
 };
 
 export const requireUser = async (): Promise<SessionUser> => {
@@ -73,6 +97,20 @@ export const requireUser = async (): Promise<SessionUser> => {
   }
 
   return user;
+};
+
+/** requireUser + workspace resolution without a second round trip. */
+export const requireSessionContext = async (): Promise<{
+  user: SessionUser;
+  workspaceId: string | null;
+}> => {
+  const { user, workspaceId } = await getSessionContext();
+
+  if (!user) {
+    redirect('/sign-in');
+  }
+
+  return { user, workspaceId };
 };
 
 export const isAdminUser = async (userId: string): Promise<boolean> => {

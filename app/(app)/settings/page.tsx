@@ -1,4 +1,4 @@
-import { isAdminUser, requireUser } from '@/lib/auth';
+import { requireUser } from '@/lib/auth';
 import { sql } from '@/lib/db';
 import SettingsClient from './SettingsClient';
 
@@ -28,49 +28,52 @@ export default async function SettingsPage() {
   const user = await requireUser();
 
   let displayName = user.name;
-
-  if (sql) {
-    const rows = await sql`
-      select display_name
-      from users
-      where id = ${user.id}
-      limit 1;
-    `;
-    if (rows[0]) {
-      displayName = rows[0].display_name ?? displayName;
-    }
-  }
-
   let preferences = defaultPreferences;
+  let isAdmin = false;
+
   if (sql) {
+    // Profile, preferences and the admin flag come from one round trip.
     const rows = await sql`
-      select preferences
-      from user_settings
-      where user_id = ${user.id}
+      select
+        users.display_name as "displayName",
+        users.is_admin as "isAdmin",
+        user_settings.preferences as "preferences"
+      from users
+      left join user_settings on user_settings.user_id = users.id
+      where users.id = ${user.id}
       limit 1;
     `;
-    const stored = rows[0]?.preferences as
+
+    const row = rows[0] as
       | {
-          ui?: { compactMode?: boolean; reduceMotion?: boolean };
-          editor?: { defaultBlockType?: 'paragraph' | 'todo' };
+          displayName: string | null;
+          isAdmin: boolean | null;
+          preferences: {
+            ui?: { compactMode?: boolean; reduceMotion?: boolean };
+            editor?: { defaultBlockType?: 'paragraph' | 'todo' };
+          } | null;
         }
       | undefined;
 
-    if (stored) {
-      preferences = {
-        ui: {
-          compactMode: Boolean(stored.ui?.compactMode),
-          reduceMotion: Boolean(stored.ui?.reduceMotion)
-        },
-        editor: {
-          defaultBlockType:
-            stored.editor?.defaultBlockType === 'todo' ? 'todo' : 'paragraph'
-        }
-      };
+    if (row) {
+      displayName = row.displayName ?? displayName;
+      isAdmin = Boolean(row.isAdmin);
+
+      const stored = row.preferences;
+      if (stored) {
+        preferences = {
+          ui: {
+            compactMode: Boolean(stored.ui?.compactMode),
+            reduceMotion: Boolean(stored.ui?.reduceMotion)
+          },
+          editor: {
+            defaultBlockType:
+              stored.editor?.defaultBlockType === 'todo' ? 'todo' : 'paragraph'
+          }
+        };
+      }
     }
   }
-
-  const isAdmin = await isAdminUser(user.id);
 
   return (
     <SettingsClient

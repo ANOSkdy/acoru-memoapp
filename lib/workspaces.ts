@@ -1,8 +1,11 @@
 import 'server-only';
 
+import { cache } from 'react';
+
 import { sql } from '@/lib/db';
 
-export const getWorkspaceIdForUser = async (
+/** Memoized per request: repeated calls in one render share a single query. */
+export const getWorkspaceIdForUser = cache(async (
   userId: string
 ): Promise<string | null> => {
   if (!sql) {
@@ -18,4 +21,4 @@ export const getWorkspaceIdForUser = async (
 
   const workspaceId = rows[0]?.id as string | undefined;
   return workspaceId ?? null;
-};
+});

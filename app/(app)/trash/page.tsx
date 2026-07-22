@@ -1,9 +1,8 @@
 import { notFound } from 'next/navigation';
 
 import TrashList from './trash-list';
-import { requireUser } from '@/lib/auth';
+import { requireSessionContext } from '@/lib/auth';
 import { sql } from '@/lib/db';
-import { getWorkspaceIdForUser } from '@/lib/workspaces';
 
 export const runtime = 'nodejs';
 
@@ -30,8 +29,7 @@ export default async function TrashPage() {
     throw new Error('Database not configured.');
   }
 
-  const user = await requireUser();
-  const workspaceId = await getWorkspaceIdForUser(user.id);
+  const { workspaceId } = await requireSessionContext();
 
   if (!workspaceId) {
     notFound();

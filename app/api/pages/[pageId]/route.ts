@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import { getSessionUser } from '@/lib/auth';
+import { getSessionContext } from '@/lib/auth';
 import { sql } from '@/lib/db';
-import { getWorkspaceIdForUser } from '@/lib/workspaces';
 
 export const runtime = 'nodejs';
 
@@ -22,12 +21,11 @@ export async function GET(
     );
   }
 
-  const user = await getSessionUser();
+  const { user, workspaceId } = await getSessionContext();
   if (!user) {
     return NextResponse.json({ ok: false }, { status: 401 });
   }
 
-  const workspaceId = await getWorkspaceIdForUser(user.id);
   if (!workspaceId) {
     return NextResponse.json({ ok: false }, { status: 404 });
   }
@@ -65,12 +63,11 @@ export async function DELETE(
     );
   }
 
-  const user = await getSessionUser();
+  const { user, workspaceId } = await getSessionContext();
   if (!user) {
     return NextResponse.json({ ok: false }, { status: 401 });
   }
 
-  const workspaceId = await getWorkspaceIdForUser(user.id);
   if (!workspaceId) {
     return NextResponse.json({ ok: false }, { status: 404 });
   }
@@ -102,12 +99,11 @@ export async function PATCH(
     );
   }
 
-  const user = await getSessionUser();
+  const { user, workspaceId } = await getSessionContext();
   if (!user) {
     return NextResponse.json({ ok: false }, { status: 401 });
   }
 
-  const workspaceId = await getWorkspaceIdForUser(user.id);
   if (!workspaceId) {
     return NextResponse.json({ ok: false }, { status: 404 });
   }

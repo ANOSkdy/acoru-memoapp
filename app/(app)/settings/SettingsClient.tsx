@@ -271,8 +271,9 @@ export default function SettingsClient({ user, preferences, isAdmin }: SettingsC
       </section>
 
       {isAdmin ? (
-        <section className="card settings-card">
+        <section className="card settings-card settings-card--admin">
           <div className="settings-card__header">
+            <span className="badge">管理者</span>
             <h2>ユーザー管理</h2>
             <p>管理者のみ新規アカウントを発行できます。</p>
           </div>
